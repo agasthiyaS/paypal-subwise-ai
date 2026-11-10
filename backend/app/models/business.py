@@ -26,7 +26,7 @@ class BusinessProfile(Base):
     # Stage 8.5: Demo Environment Isolation
     is_demo = Column(Boolean, default=False, nullable=False)    # False for real Sandbox/Live, True for DemoTech Solutions
     profile_type = Column(String, default="STANDARD")           # 'STANDARD' vs 'DEMO'
-    account_type = Column(String, default="business", nullable=False) # 'individual', 'household', 'business'
+    account_type = Column(String, default="business", server_default="business", nullable=False) # 'individual', 'household', 'business'
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
