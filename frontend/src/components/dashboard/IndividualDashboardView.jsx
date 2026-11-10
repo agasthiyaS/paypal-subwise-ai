@@ -109,6 +109,14 @@ const IndividualDashboardView = ({
         </div>
 
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <Link
+            to="/expenses"
+            className="btn-fintech btn-fintech-outline btn-sm"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.92rem', minHeight: '44px', padding: '0.5rem 1.15rem' }}
+          >
+            <DollarSign size={16} color="var(--paypal-blue)" />
+            <span>Manage Expenses</span>
+          </Link>
           <button
             onClick={() => setModalOpen(true)}
             className="btn-fintech btn-fintech-outline btn-sm"

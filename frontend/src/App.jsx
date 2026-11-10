@@ -20,6 +20,8 @@ import SimulatorPage from './pages/SimulatorPage';
 import RecommendationsPage from './pages/RecommendationsPage';
 import ReportsPage from './pages/ReportsPage';
 import AssistantPage from './pages/AssistantPage';
+import ExpensesPage from './pages/ExpensesPage';
+import HouseholdPage from './pages/HouseholdPage';
 
 /* ============================================================ */
 /*  Loading Screen                                              */
@@ -120,6 +122,8 @@ function App() {
       {/* Protected app routes */}
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/expenses" element={<ExpensesPage />} />
+        <Route path="/household" element={<HouseholdPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
         <Route path="/forecast" element={<ForecastPage />} />
         <Route path="/simulator" element={<SimulatorPage />} />

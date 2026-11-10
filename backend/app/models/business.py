@@ -40,3 +40,6 @@ class BusinessProfile(Base):
     subscriptions = relationship("Subscription", back_populates="business", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="business", cascade="all, delete-orphan")
     scenarios = relationship("ScenarioSimulation", back_populates="business", cascade="all, delete-orphan")
+    household_members = relationship("HouseholdMember", back_populates="business", cascade="all, delete-orphan")
+    expenses = relationship("Expense", back_populates="business", cascade="all, delete-orphan")
+    budgets = relationship("Budget", back_populates="business", cascade="all, delete-orphan")

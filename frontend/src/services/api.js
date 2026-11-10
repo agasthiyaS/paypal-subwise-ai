@@ -259,4 +259,69 @@ export const demoAPI = {
   },
 };
 
+export const expensesAPI = {
+  getExpenses: async (params) => {
+    const res = await apiClient.get('/expenses', { params });
+    return res.data;
+  },
+  createExpense: async (data) => {
+    const res = await apiClient.post('/expenses', data);
+    return res.data;
+  },
+  updateExpense: async (id, data) => {
+    const res = await apiClient.put(`/expenses/${id}`, data);
+    return res.data;
+  },
+  deleteExpense: async (id) => {
+    const res = await apiClient.delete(`/expenses/${id}`);
+    return res.data;
+  },
+  getSummary: async (params) => {
+    const res = await apiClient.get('/expenses/summary', { params });
+    return res.data;
+  },
+  syncPayPal: async () => {
+    const res = await apiClient.post('/expenses/sync-paypal');
+    return res.data;
+  },
+};
+
+export const householdAPI = {
+  getMembers: async () => {
+    const res = await apiClient.get('/household/members');
+    return res.data;
+  },
+  createMember: async (data) => {
+    const res = await apiClient.post('/household/members', data);
+    return res.data;
+  },
+  updateMember: async (id, data) => {
+    const res = await apiClient.put(`/household/members/${id}`, data);
+    return res.data;
+  },
+  deleteMember: async (id) => {
+    const res = await apiClient.delete(`/household/members/${id}`);
+    return res.data;
+  },
+  getSummary: async (params) => {
+    const res = await apiClient.get('/household/summary', { params });
+    return res.data;
+  },
+};
+
+export const budgetsAPI = {
+  getBudgets: async () => {
+    const res = await apiClient.get('/budgets');
+    return res.data;
+  },
+  setBudget: async (data) => {
+    const res = await apiClient.post('/budgets', data);
+    return res.data;
+  },
+  deleteBudget: async (id) => {
+    const res = await apiClient.delete(`/budgets/${id}`);
+    return res.data;
+  },
+};
+
 export default apiClient;

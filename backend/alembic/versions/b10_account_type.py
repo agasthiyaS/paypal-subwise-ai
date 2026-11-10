@@ -54,3 +54,4 @@ def downgrade() -> None:
     if 'account_type' in columns:
         with op.batch_alter_table('business_profiles') as batch_op:
             batch_op.drop_column('account_type')
+

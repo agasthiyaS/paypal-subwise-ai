@@ -33,6 +33,7 @@ const Sidebar = () => {
     footerDesc = 'Automated recurring expense monitoring keeps you ahead of silent subscription leaks.';
     menuItems = [
       { to: '/dashboard', label: 'Personal Dashboard', icon: LayoutDashboard },
+      { to: '/expenses', label: 'Income & Expenses', icon: TrendingDown },
       { to: '/subscriptions', label: 'Subscriptions & Apps', icon: Layers },
       { to: '/forecast', label: 'Cash Flow & Income', icon: LineChart },
       { to: '/recommendations', label: 'AI Savings Advice', icon: Sparkles, badge: 'Tailored', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
@@ -45,6 +46,8 @@ const Sidebar = () => {
     footerDesc = 'Compare grocery prices, detect utility spikes, and streamline shared living costs.';
     menuItems = [
       { to: '/dashboard', label: 'Household Overview', icon: LayoutDashboard },
+      { to: '/household', label: 'Household Workspace', icon: Home },
+      { to: '/expenses', label: 'Shared Expenses', icon: TrendingDown },
       { to: '/subscriptions', label: 'Shared Subscriptions', icon: Layers },
       { to: '/forecast', label: 'Household Cash Flow', icon: LineChart },
       { to: '/recommendations', label: 'Grocery & Utility AI', icon: Sparkles, badge: 'Deals', badgeColor: '#d97706', badgeBg: '#fef3c7', badgeBorder: '#fde68a' },
