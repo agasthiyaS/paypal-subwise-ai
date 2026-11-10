@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   LayoutDashboard,
   Layers,
@@ -10,24 +11,67 @@ import {
   ShieldCheck,
   TrendingDown,
   MessageSquare,
+  Home,
+  User,
+  Building2,
+  ShoppingCart,
+  Zap,
 } from 'lucide-react';
 
 const Sidebar = () => {
-  const menuItems = [
-    { to: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
-    { to: '/subscriptions', label: 'Subscription Manager', icon: Layers },
-    { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
-    { to: '/simulator', label: 'Scenario Simulator', icon: Sliders },
-    { to: '/recommendations', label: 'AI Recommendations', icon: Sparkles, badge: '4 New' },
-    { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
-    { to: '/assistant', label: 'AI Assistant', icon: MessageSquare, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-  ];
+  const { business } = useAuth();
+  const accountType = business?.account_type || 'business';
+
+  let menuItems = [];
+  let headerLabel = 'Fintech Navigation';
+  let footerTitle = 'Solvency Assurance';
+  let footerDesc = 'Continuous subscription commitment tracking protects SMB operating liquidity.';
+
+  if (accountType === 'individual') {
+    headerLabel = 'Personal Intelligence';
+    footerTitle = 'Savings Assurance';
+    footerDesc = 'Automated recurring expense monitoring keeps you ahead of silent subscription leaks.';
+    menuItems = [
+      { to: '/dashboard', label: 'Personal Dashboard', icon: LayoutDashboard },
+      { to: '/subscriptions', label: 'Subscriptions & Apps', icon: Layers },
+      { to: '/forecast', label: 'Cash Flow & Income', icon: LineChart },
+      { to: '/recommendations', label: 'AI Savings Advice', icon: Sparkles, badge: 'Tailored', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
+      { to: '/assistant', label: 'Savings Assistant', icon: MessageSquare, badge: 'AI', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
+      { to: '/reports', label: 'Spending Reports', icon: FileBarChart },
+    ];
+  } else if (accountType === 'household') {
+    headerLabel = 'Household Intelligence';
+    footerTitle = 'Household Budgeting';
+    footerDesc = 'Compare grocery prices, detect utility spikes, and streamline shared living costs.';
+    menuItems = [
+      { to: '/dashboard', label: 'Household Overview', icon: LayoutDashboard },
+      { to: '/subscriptions', label: 'Shared Subscriptions', icon: Layers },
+      { to: '/forecast', label: 'Household Cash Flow', icon: LineChart },
+      { to: '/recommendations', label: 'Grocery & Utility AI', icon: Sparkles, badge: 'Deals', badgeColor: '#d97706', badgeBg: '#fef3c7', badgeBorder: '#fde68a' },
+      { to: '/assistant', label: 'Family AI Assistant', icon: MessageSquare, badge: 'AI', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
+      { to: '/reports', label: 'Shared Bill Reports', icon: FileBarChart },
+    ];
+  } else {
+    // Small Business
+    headerLabel = 'Fintech Navigation';
+    footerTitle = 'Solvency Assurance';
+    footerDesc = 'Continuous subscription commitment tracking protects SMB operating liquidity.';
+    menuItems = [
+      { to: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
+      { to: '/subscriptions', label: 'Subscription Manager', icon: Layers },
+      { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
+      { to: '/simulator', label: 'Scenario Simulator', icon: Sliders },
+      { to: '/recommendations', label: 'AI Recommendations', icon: Sparkles, badge: '4 New' },
+      { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
+      { to: '/assistant', label: 'AI Assistant', icon: MessageSquare, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
+    ];
+  }
 
   return (
     <aside className="app-sidebar">
       <div className="sidebar-header">
         <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          Fintech Navigation
+          {headerLabel}
         </div>
       </div>
 
@@ -70,9 +114,9 @@ const Sidebar = () => {
           lineHeight: 1.55
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', fontWeight: 700, marginBottom: '0.45rem', fontSize: '0.95rem' }}>
-            <ShieldCheck size={18} /> Solvency Assurance
+            <ShieldCheck size={18} /> {footerTitle}
           </div>
-          Continuous subscription commitment tracking protects SMB operating liquidity.
+          {footerDesc}
         </div>
       </div>
     </aside>

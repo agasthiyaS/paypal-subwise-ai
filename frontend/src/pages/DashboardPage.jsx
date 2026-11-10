@@ -10,6 +10,8 @@ import IncomeExpenseChart from '../components/dashboard/IncomeExpenseChart';
 import SubscriptionSpendingChart from '../components/dashboard/SubscriptionSpendingChart';
 import CashFlowTrendChart from '../components/dashboard/CashFlowTrendChart';
 import CategoryPieChart from '../components/dashboard/CategoryPieChart';
+import IndividualDashboardView from '../components/dashboard/IndividualDashboardView';
+import HouseholdDashboardView from '../components/dashboard/HouseholdDashboardView';
 import {
   TrendingUp,
   TrendingDown,
@@ -377,6 +379,95 @@ const DashboardPage = () => {
   }, [subscriptionSummary]);
 
   const upcomingTotal = upcomingPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+
+  const accountType = business?.account_type || 'business';
+
+  const viewProps = {
+    business,
+    transactions,
+    filteredTransactions,
+    hasTransactions,
+    loadingData,
+    syncing,
+    syncStatus,
+    handleSync,
+    handleToggleMode,
+    handleResetDemo,
+    setModalOpen,
+    setTestPaymentModalOpen,
+    isDemo,
+    isSandbox,
+    isLive,
+    formatLastSync,
+    displayCompanyName,
+    operatingCount,
+    monthlyIncome,
+    monthlyExpenses,
+    fundingInflows,
+    totalSubSpend,
+    activeSubsCount,
+    verifiedCashBalance,
+    runwayStatus,
+    healthData,
+    potentialSavings,
+    potentialAnnualSavings,
+    recommendations,
+    upcomingPayments,
+    upcomingTotal,
+    subAnalysis,
+    monthlyChartData,
+    categoryPieData,
+  };
+
+  if (accountType === 'individual') {
+    return (
+      <>
+        <IndividualDashboardView {...viewProps} />
+        <PayPalConnectModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onConnected={() => {
+            setModalOpen(false);
+            refreshBusiness();
+            loadData();
+          }}
+        />
+        <SandboxPaymentModal
+          isOpen={testPaymentModalOpen}
+          onClose={() => setTestPaymentModalOpen(false)}
+          onSuccess={async () => {
+            await refreshBusiness();
+            await loadData();
+          }}
+        />
+      </>
+    );
+  }
+
+  if (accountType === 'household') {
+    return (
+      <>
+        <HouseholdDashboardView {...viewProps} />
+        <PayPalConnectModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onConnected={() => {
+            setModalOpen(false);
+            refreshBusiness();
+            loadData();
+          }}
+        />
+        <SandboxPaymentModal
+          isOpen={testPaymentModalOpen}
+          onClose={() => setTestPaymentModalOpen(false)}
+          onSuccess={async () => {
+            await refreshBusiness();
+            await loadData();
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>

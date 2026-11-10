@@ -4,6 +4,7 @@ import datetime
 
 class BusinessProfileBase(BaseModel):
     company_name: str
+    account_type: Optional[str] = "business"
     industry: Optional[str] = "SaaS / Technology"
     monthly_baseline_revenue: float = 0.0
     current_cash_reserves: float = 0.0
@@ -13,6 +14,7 @@ class BusinessProfileBase(BaseModel):
 
 class BusinessProfileUpdate(BaseModel):
     company_name: Optional[str] = None
+    account_type: Optional[str] = None
     industry: Optional[str] = None
     monthly_baseline_revenue: Optional[float] = None
     current_cash_reserves: Optional[float] = None

@@ -52,6 +52,21 @@ const Navbar = () => {
   const isSandbox = !isDemo && paypalMode === 'sandbox';
   const isLive = !isDemo && paypalMode === 'live';
 
+  const accountType = business?.account_type || 'business';
+  const accountTagline = accountType === 'individual'
+    ? 'Personal Financial Intelligence & Savings'
+    : accountType === 'household'
+    ? 'Household Budget & Shared Savings Intelligence'
+    : 'Fintech Cash-Flow & Subscription Intelligence';
+
+  const accountBadge = isDemo
+    ? 'Demo Mode'
+    : accountType === 'individual'
+    ? 'Individual Edition'
+    : accountType === 'household'
+    ? 'Household Edition'
+    : 'Business Edition';
+
   return (
     <>
       <header className="top-navbar">
@@ -62,10 +77,10 @@ const Navbar = () => {
               PayPal <span>SubWise</span> AI
             </div>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.02em' }}>
-              Fintech Cash-Flow &amp; Subscription Intelligence
+              {accountTagline}
             </div>
           </div>
-          <span className="nav-brand-badge">{isDemo ? 'Demo Mode' : 'SaaS Edition'}</span>
+          <span className="nav-brand-badge">{accountBadge}</span>
         </Link>
 
         <div className="nav-right-actions">

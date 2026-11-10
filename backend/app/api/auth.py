@@ -27,11 +27,22 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
     db.add(user)
     db.flush() # Populate user.id
 
-    # Create associated Business Profile
+    # Create associated Business / Account Profile
+    acct_type = payload.account_type or "business"
+    company_name = payload.company_name
+    if not company_name:
+        if acct_type == "individual":
+            company_name = f"{payload.full_name or 'Personal'}'s Finances"
+        elif acct_type == "household":
+            company_name = f"{payload.full_name or 'Family'} Household"
+        else:
+            company_name = "My Business"
+
     biz = BusinessProfile(
         user_id=user.id,
-        company_name=payload.company_name,
-        industry=payload.industry or "SaaS / Technology",
+        company_name=company_name,
+        account_type=acct_type,
+        industry=payload.industry or ("Personal Finances" if acct_type == "individual" else "Household Budget" if acct_type == "household" else "SaaS / Technology"),
         monthly_baseline_revenue=payload.monthly_baseline_revenue or 0.0,
         current_cash_reserves=payload.current_cash_reserves or 0.0,
         paypal_mode="sandbox",
@@ -49,7 +60,8 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
         "user_id": user.id,
         "business_id": biz.id,
         "email": user.email,
-        "company_name": biz.company_name
+        "company_name": biz.company_name,
+        "account_type": biz.account_type or "business"
     }
 
 @router.post("/login", response_model=Token)
@@ -77,6 +89,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     )
     biz_connected = bool(biz and biz.paypal_connected) or bool(settings.PAYPAL_CLIENT_ID and settings.PAYPAL_CLIENT_SECRET)
 
+    biz_acct_type = biz.account_type if (biz and biz.account_type) else "business"
+
     token = create_access_token(data={"sub": str(user.id), "email": user.email, "business_id": biz_id})
     return {
         "access_token": token,
@@ -85,6 +99,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "business_id": biz_id,
         "email": user.email,
         "company_name": biz_name,
+        "account_type": biz_acct_type,
         "paypal_mode": biz_mode,
         "paypal_connected": biz_connected
     }
