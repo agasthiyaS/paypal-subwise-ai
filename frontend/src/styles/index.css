@@ -1,0 +1,668 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Light & Clean FinTech Backgrounds */
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-hover: #e2e8f0;
+
+  /* Deep Navy & PayPal Primary Identity */
+  --navy-primary: #003087;      /* PayPal Deep Navy */
+  --navy-hover: #001f5c;
+  --paypal-blue: #0070ba;       /* PayPal Bright Blue */
+  --paypal-blue-subtle: #e0f2fe;
+  --navy-slate: #0f172a;        /* Deep Slate Navy for headings */
+  --navy-secondary: #1e293b;
+
+  /* Borders & Dividers */
+  --border-light: #e2e8f0;
+  --border-medium: #cbd5e1;
+  --border-focus: #0070ba;
+
+  /* Typography Colors */
+  --text-main: #0f172a;         /* High-contrast dark text */
+  --text-body: #334155;         /* Body copy */
+  --text-muted: #64748b;        /* Secondary notes */
+  --text-caption: #94a3b8;
+
+  /* Financial Health & Risk Indicators */
+  --emerald-accent: #10b981;    /* Positive income / savings */
+  --emerald-dark: #059669;
+  --emerald-bg: #ecfdf5;
+  --emerald-border: #a7f3d0;
+
+  --amber-accent: #f59e0b;      /* Moderate risk / price creep */
+  --amber-dark: #d97706;
+  --amber-bg: #fffbeb;
+  --amber-border: #fde68a;
+
+  --rose-accent: #ef4444;       /* High risk / cash drain */
+  --rose-dark: #dc2626;
+  --rose-bg: #fef2f2;
+  --rose-border: #fecaca;
+
+  --indigo-accent: #6366f1;
+  --indigo-bg: #eef2ff;
+
+  /* Geometry & Shadows */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.06);
+  --shadow-card: 0 2px 6px 0 rgba(15, 23, 42, 0.07), 0 1px 3px -1px rgba(15, 23, 42, 0.05);
+  --shadow-hover: 0 12px 20px -3px rgba(15, 23, 42, 0.09), 0 6px 8px -4px rgba(15, 23, 42, 0.05);
+  --shadow-modal: 0 24px 32px -5px rgba(15, 23, 42, 0.18), 0 12px 14px -6px rgba(15, 23, 42, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Global Scale: 18px base root scale */
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 17.5px;
+  line-height: 1.65;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Typography Hierarchy (34-36px Headings, 24-28px Section Headings, 17-18px Body) */
+h1, .heading-xl {
+  font-size: 2rem; /* 36px */
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  color: var(--navy-slate);
+}
+
+h2, .heading-lg {
+  font-size: 1.5rem; /* 27px */
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+  color: var(--navy-slate);
+}
+
+h3, .heading-md {
+  font-size: 1.3rem; /* 23.4px */
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  color: var(--navy-slate);
+}
+
+h4, .heading-sm {
+  font-size: 1.12rem; /* 20.1px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--navy-slate);
+}
+
+p, .text-body {
+  font-size: 1rem; /* 18px */
+  line-height: 1.65;
+  color: var(--text-body);
+}
+
+.text-muted {
+  font-size: 0.92rem; /* 16.5px */
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.text-caption {
+  font-size: 0.85rem; /* 15.3px */
+  line-height: 1.45;
+  color: var(--text-caption);
+}
+
+/* Base Layout Structure */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-app);
+}
+
+.main-viewport {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.content-container {
+  padding: 2.75rem 3rem;
+  max-width: 1560px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .content-container {
+    padding: 2rem 1.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    padding: 1.5rem 1rem;
+  }
+}
+
+/* Top Navigation Bar */
+.top-navbar {
+  height: 80px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 3rem;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: var(--shadow-sm);
+}
+
+.nav-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  text-decoration: none;
+  color: var(--text-main);
+}
+
+.nav-brand-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--navy-primary) 0%, var(--paypal-blue) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 1.5rem;
+  box-shadow: 0 3px 10px rgba(0, 48, 135, 0.25);
+}
+
+.nav-brand-title {
+  font-size: 1.45rem; /* ~26px */
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--navy-slate);
+}
+
+.nav-brand-title span {
+  color: var(--paypal-blue);
+}
+
+.nav-brand-badge {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  background: var(--navy-primary);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nav-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.35rem;
+}
+
+/* Sidebar Navigation */
+.app-sidebar {
+  width: 310px;
+  background-color: var(--navy-slate);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 2.25rem 1.35rem;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-header {
+  padding: 0 0.85rem 1.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.4rem;
+}
+
+.sidebar-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+  padding: 0.95rem 1.25rem;
+  border-radius: var(--radius-md);
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 1.05rem; /* ~19px */
+  font-weight: 500;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.sidebar-item.active {
+  background-color: var(--paypal-blue);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 3px 12px rgba(0, 112, 186, 0.35);
+}
+
+.sidebar-item-badge {
+  margin-left: auto;
+  background: var(--amber-accent);
+  color: #0f172a;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.22rem 0.65rem;
+  border-radius: 9999px;
+}
+
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Cards & Surfaces */
+.fintech-card, .card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.fintech-card:hover, .card:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-hover);
+}
+
+.stat-grid, .stat-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1.65rem;
+  margin-bottom: 2.25rem;
+}
+
+/* Stat Card — Metric Numbers 40-44px */
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 2rem;
+}
+
+.stat-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: 0.95rem; /* ~17px */
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-main-number {
+  font-size: 2.45rem; /* ~44px */
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--navy-slate);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.1;
+}
+
+.stat-bottom-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: 0.95rem; /* ~17px */
+  color: var(--text-muted);
+}
+
+/* Financial Health Gauge Card */
+.health-meter-container {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.health-score-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.55rem;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+}
+
+/* Buttons — Height ~50-52px, Font 17-18px */
+.btn-fintech, .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 0.9rem 1.65rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem; /* ~18px */
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: 1.4;
+  min-height: 50px;
+}
+
+.btn-fintech-primary, .btn-primary {
+  background-color: var(--navy-primary);
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 48, 135, 0.25);
+}
+
+.btn-fintech-primary:hover, .btn-primary:hover {
+  background-color: var(--navy-hover);
+  box-shadow: 0 6px 14px rgba(0, 48, 135, 0.35);
+}
+
+.btn-fintech-accent {
+  background-color: var(--paypal-blue);
+  color: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 112, 186, 0.25);
+}
+
+.btn-fintech-accent:hover {
+  background-color: #005ea6;
+  box-shadow: 0 6px 14px rgba(0, 112, 186, 0.35);
+}
+
+.btn-fintech-outline, .btn-secondary {
+  background-color: #ffffff;
+  color: var(--navy-slate);
+  border: 1.5px solid var(--border-medium);
+}
+
+.btn-fintech-outline:hover, .btn-secondary:hover {
+  background-color: var(--bg-subtle);
+  border-color: var(--navy-slate);
+}
+
+.btn-fintech-danger {
+  background-color: var(--rose-bg);
+  color: var(--rose-dark);
+  border: 1.5px solid var(--rose-border);
+}
+
+.btn-fintech-danger:hover {
+  background-color: #fee2e2;
+}
+
+.btn-sm {
+  padding: 0.6rem 1.15rem;
+  font-size: 0.92rem; /* ~16.5px */
+  min-height: 42px;
+}
+
+.btn-lg {
+  padding: 1.1rem 2.25rem;
+  font-size: 1.12rem; /* ~20px */
+  min-height: 56px;
+}
+
+/* Badges & Status Pills */
+.status-pill, .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.88rem; /* ~15.8px */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-pill-emerald, .badge-live {
+  background-color: var(--emerald-bg);
+  color: var(--emerald-dark);
+  border: 1px solid var(--emerald-border);
+}
+
+.status-pill-amber, .badge-sandbox {
+  background-color: var(--amber-bg);
+  color: var(--amber-dark);
+  border: 1px solid var(--amber-border);
+}
+
+.status-pill-rose {
+  background-color: var(--rose-bg);
+  color: var(--rose-dark);
+  border: 1px solid var(--rose-border);
+}
+
+.status-pill-navy {
+  background-color: var(--paypal-blue-subtle);
+  color: var(--navy-primary);
+  border: 1px solid #bae6fd;
+}
+
+/* Tables — Enhanced Readability & Row Spacing */
+.fintech-table-wrapper, .table-container {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  overflow-x: auto;
+  box-shadow: var(--shadow-card);
+}
+
+.fintech-table, table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.fintech-table th, table th {
+  background-color: var(--bg-subtle);
+  padding: 1.25rem 1.65rem;
+  font-size: 0.9rem; /* ~16.2px */
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  border-bottom: 2px solid var(--border-light);
+}
+
+.fintech-table td, table td {
+  padding: 1.35rem 1.65rem;
+  font-size: 1rem; /* ~18px */
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-body);
+  line-height: 1.6;
+}
+
+.fintech-table tr:hover td, table tr:hover td {
+  background-color: #f8fafc;
+}
+
+/* Form Controls & Inputs — Height ~50-52px, Font 17-18px */
+.form-group, .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-bottom: 1.65rem;
+}
+
+.form-label, .form-label-title {
+  font-size: 1rem; /* 18px */
+  font-weight: 600;
+  color: var(--navy-slate);
+  display: block;
+  margin-bottom: 0.45rem;
+  line-height: 1.4;
+}
+
+.form-input, .fintech-input, .fintech-select, select.form-input {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 0.95rem 1.25rem;
+  font-size: 1rem; /* 18px */
+  line-height: 1.55;
+  color: var(--text-main);
+  outline: none;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  width: 100%;
+  min-height: 52px;
+}
+
+.form-input:focus, .fintech-input:focus, .fintech-select:focus {
+  border-color: var(--paypal-blue);
+  box-shadow: 0 0 0 3.5px rgba(0, 112, 186, 0.2);
+}
+
+/* Transparent Demonstration Disclaimer Banner */
+.demo-banner {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  padding: 0.95rem 2.25rem;
+  font-size: 0.95rem; /* ~17px */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #93c5fd;
+  line-height: 1.5;
+}
+
+/* Modal */
+.fintech-modal-overlay,
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.fintech-modal-body,
+.modal-content {
+  background-color: #ffffff;
+  border-radius: var(--radius-xl);
+  max-width: 680px;
+  width: 100%;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-modal), 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-light);
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  z-index: 10000;
+  margin: auto;
+}
+
+/* Range Sliders */
+.fintech-slider {
+  width: 100%;
+  height: 9px;
+  background: var(--border-medium);
+  border-radius: 5px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.fintech-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--paypal-blue);
+  cursor: pointer;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 48, 135, 0.35);
+}
+
+/* Loading Spinner */
+.spinner-border {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
