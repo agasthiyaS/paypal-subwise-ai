@@ -51,6 +51,8 @@ class ExplainableHealthScore(BaseModel):
     risk_factors: List[str] = []
     actionable_improvements: List[str] = []
     disclaimer: str
+    has_sufficient_data: bool = True
+    missing_data_reasons: List[str] = []
 
 class ScenarioForecastPoint(BaseModel):
     day: int

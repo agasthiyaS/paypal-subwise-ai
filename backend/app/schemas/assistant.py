@@ -35,6 +35,7 @@ class AssistantQueryResponse(BaseModel):
     suggested_followups: List[str] = []
     reporting_period: Optional[str] = None
     disclaimer: str
+    llm_provider_configured: bool = False
 
 
 class SuggestionItem(BaseModel):
@@ -46,4 +47,6 @@ class SuggestionItem(BaseModel):
 class AssistantSuggestionsResponse(BaseModel):
     suggestions: List[SuggestionItem] = []
     data_sufficiency_status: str
+    llm_provider_configured: bool = False
+    active_engine: str = "SubWise Deterministic Engine"
 

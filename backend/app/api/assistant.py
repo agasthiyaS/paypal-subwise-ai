@@ -77,3 +77,29 @@ def get_assistant_suggestions(
         subscriptions=subscriptions,
         transactions=transactions,
     )
+
+
+@router.get("/provider-status")
+def get_assistant_provider_status(
+    http_request: Request = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Returns the operational status of the AI Assistant backend without revealing credentials.
+    """
+    biz = get_active_business(current_user=current_user, db=db, request=http_request)
+    is_llm = FinancialAssistantEngine.is_llm_configured()
+    return {
+        "status": "active",
+        "llm_provider_configured": is_llm,
+        "active_generation_model": (
+            "Google Gemini 1.5 Flash (Hybrid Augmentation)"
+            if is_llm
+            else "SubWise Deterministic Intelligence Engine"
+        ),
+        "deterministic_engine": "SubWise Deterministic Intelligence Engine",
+        "fallback_available": True,
+        "secrets_exposed": False,
+        "company_name": biz.company_name
+    }

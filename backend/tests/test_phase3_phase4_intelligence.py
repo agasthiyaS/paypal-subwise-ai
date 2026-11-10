@@ -149,6 +149,167 @@ def test_financial_health_score(db):
     assert "not a credit score" in health.disclaimer.lower()
 
 
+def test_financial_health_configured_budget(db):
+    """Verify health score uses actual configured budget when present."""
+    biz = db.query(BusinessProfile).filter_by(id=201).first()
+    # Add an overall budget
+    b = Budget(
+        business_id=201,
+        category="Overall",
+        monthly_limit=4500.0,
+        period_month=11,
+        period_year=2026
+    )
+    db.add(b)
+    db.commit()
+
+    spending = SmartSpendingService.analyze_spending(business=biz, db=db, month=11, year=2026)
+    health = FinancialHealthService.calculate_health_score(business=biz, analysis=spending, db=db)
+
+    budget_factor = next(f for f in health.factors if f.factor_name == "Budget Adherence")
+    assert "configured monthly budget" in budget_factor.description
+    assert "$4,500.00" in budget_factor.description
+    assert budget_factor.score > 0
+    assert health.has_sufficient_data is True
+
+    # Clean up budget for subsequent tests
+    db.delete(b)
+    db.commit()
+
+
+def test_financial_health_available_baseline_revenue(db):
+    """Verify health score falls back to baseline revenue ceiling only when appropriate."""
+    biz = db.query(BusinessProfile).filter_by(id=201).first()
+    assert biz.monthly_baseline_revenue == 6000.0
+
+    spending = SmartSpendingService.analyze_spending(business=biz, db=db, month=11, year=2026)
+    health = FinancialHealthService.calculate_health_score(business=biz, analysis=spending, db=db)
+
+    budget_factor = next(f for f in health.factors if f.factor_name == "Budget Adherence")
+    assert "monthly baseline revenue ceiling" in budget_factor.description
+    assert "$6,000.00" in budget_factor.description
+    assert budget_factor.score > 0
+    assert health.has_sufficient_data is True
+
+
+def test_financial_health_neither_budget_nor_baseline(db):
+    """Verify health score returns explicit insufficient-data state with no hardcoded $3,500 fallback."""
+    user2 = User(id=202, email="nobudget@test.com", hashed_password="pw", full_name="No Budget", is_active=True)
+    biz2 = BusinessProfile(
+        id=202,
+        user_id=202,
+        company_name="No Budget Profile",
+        account_type="individual",
+        monthly_baseline_revenue=None,
+        current_cash_reserves=5000.0
+    )
+    db.add(user2)
+    db.add(biz2)
+    db.commit()
+
+    spending = SmartSpendingService.analyze_spending(business=biz2, db=db, month=11, year=2026)
+    health = FinancialHealthService.calculate_health_score(business=biz2, analysis=spending, db=db)
+
+    budget_factor = next(f for f in health.factors if f.factor_name == "Budget Adherence")
+    # Must NOT contain $3,500 or arbitrary numbers
+    assert "3500" not in budget_factor.description
+    assert "$3,500" not in budget_factor.description
+    assert budget_factor.score == 0
+    assert budget_factor.impact == "neutral"
+    assert "Insufficient Data" in budget_factor.description or "No budget configured" in budget_factor.description
+    assert health.has_sufficient_data is False
+    assert any("budget" in r.lower() for r in health.missing_data_reasons)
+    assert any("budget" in a.lower() for a in health.actionable_improvements)
+
+
+def test_financial_health_zero_expenses(db):
+    """Verify health score gracefully handles zero expenses without arbitrary burn rate assumptions."""
+    biz = db.query(BusinessProfile).filter_by(id=201).first()
+    # Mock zero-expense spending analysis
+    from app.schemas.consumer_intelligence import SpendingAnalysisResult
+    zero_spending = SpendingAnalysisResult(
+        month=11,
+        year=2026,
+        total_income=4000.0,
+        total_expenses=0.0,
+        net_savings=4000.0,
+        savings_rate_percent=100.0,
+        recurring_expenses_total=0.0,
+        discretionary_expenses_total=0.0,
+        has_sufficient_data=True
+    )
+    health = FinancialHealthService.calculate_health_score(business=biz, analysis=zero_spending, db=db)
+
+    budget_factor = next(f for f in health.factors if f.factor_name == "Budget Adherence")
+    assert budget_factor.score == 25
+    assert budget_factor.impact == "positive"
+    assert "0% utilized" in budget_factor.description
+
+    liquidity_factor = next(f for f in health.factors if f.factor_name == "Liquidity & Safety Buffer")
+    assert liquidity_factor.score == 20
+    assert "zero active monthly burn" in liquidity_factor.description or "zero recorded monthly burn" in liquidity_factor.description
+
+
+def test_financial_health_insufficient_historical_data(db):
+    """Verify health score reflects insufficient historical data honestly."""
+    biz = db.query(BusinessProfile).filter_by(id=202).first()
+    from app.schemas.consumer_intelligence import SpendingAnalysisResult
+    insufficient_spending = SpendingAnalysisResult(
+        month=11,
+        year=2026,
+        total_income=0.0,
+        total_expenses=0.0,
+        net_savings=0.0,
+        savings_rate_percent=0.0,
+        recurring_expenses_total=0.0,
+        discretionary_expenses_total=0.0,
+        has_sufficient_data=False
+    )
+    health = FinancialHealthService.calculate_health_score(business=biz, analysis=insufficient_spending, db=db)
+
+    assert health.has_sufficient_data is False
+    assert len(health.missing_data_reasons) > 0
+    savings_factor = next(f for f in health.factors if f.factor_name == "Monthly Savings Rate")
+    assert savings_factor.impact == "neutral"
+    assert "No income or expense" in savings_factor.description
+
+
+def test_assistant_gemini_provider_detection_and_fallback():
+    """Verify AI assistant safely checks GEMINI_API_KEY without leaking or calling if unconfigured."""
+    is_configured = FinancialAssistantEngine.is_llm_configured()
+    assert isinstance(is_configured, bool)
+
+    biz = BusinessProfile(
+        id=299,
+        company_name="Safe Provider Test",
+        current_cash_reserves=10000.0,
+        monthly_baseline_revenue=5000.0
+    )
+
+    # Check starter suggestions reflect correct engine
+    sug = FinancialAssistantEngine.get_starter_suggestions(biz, [], [])
+    if not is_configured:
+        assert sug.llm_provider_configured is False
+        assert "Deterministic" in sug.active_engine
+
+    # Check general fintech query routes safely to deterministic fallback
+    req = AssistantQueryRequest(message="Can you explain how SubWise tracks financial risk?")
+    res = FinancialAssistantEngine.process_query(
+        business=biz,
+        subscriptions=[],
+        transactions=[],
+        request=req
+    )
+
+    # Must be deterministic when no key is configured
+    if not is_configured:
+        assert res.is_ai_generated is False
+        assert "Deterministic" in res.generation_model
+        assert res.llm_provider_configured is False
+        assert "key" not in res.response_text.lower()
+        assert "secret" not in res.response_text.lower()
+
+
 def test_multi_scenario_forecast(db):
     biz = db.query(BusinessProfile).filter_by(id=201).first()
     spending = SmartSpendingService.analyze_spending(business=biz, db=db, month=11, year=2026)

@@ -43,6 +43,20 @@ from app.services.smart_spending_service import SmartSpendingService
 class FinancialAssistantEngine:
 
     @classmethod
+    def is_llm_configured(cls) -> bool:
+        """
+        Safely detects whether a valid Gemini API key is configured.
+        Never reveals the secret key in returns, logs, or error messages.
+        Requires non-empty string, length >= 16, and not placeholder values.
+        """
+        raw_key = (settings.GEMINI_API_KEY or settings.LLM_API_KEY or "").strip()
+        if not raw_key:
+            return False
+        if len(raw_key) < 16 or raw_key.lower().startswith(("your_", "my_", "test_", "placeholder", "subwise_")):
+            return False
+        return True
+
+    @classmethod
     def get_starter_suggestions(
         cls,
         business: BusinessProfile,
@@ -54,6 +68,7 @@ class FinancialAssistantEngine:
         """
         confirmed_subs = [s for s in subscriptions if (s.status or "").lower() == "active"]
         valid_txs = [t for t in transactions if ForecastEngine.is_valid_operating(t)]
+        is_llm = cls.is_llm_configured()
 
         if not valid_txs and not confirmed_subs:
             status = "insufficient_data"
@@ -111,7 +126,9 @@ class FinancialAssistantEngine:
 
         return AssistantSuggestionsResponse(
             suggestions=suggestions,
-            data_sufficiency_status=status
+            data_sufficiency_status=status,
+            llm_provider_configured=is_llm,
+            active_engine="Google Gemini 1.5 Flash (Hybrid Augmentation)" if is_llm else "SubWise Deterministic Engine"
         )
 
     # -------------------------------------------------------------------------
@@ -1085,8 +1102,9 @@ class FinancialAssistantEngine:
             f"Reporting Period: {overview.monthly_briefing.reporting_period}\n"
         )
 
-        api_key = settings.GEMINI_API_KEY or settings.LLM_API_KEY
-        if api_key:
+        is_llm = cls.is_llm_configured()
+        if is_llm:
+            api_key = (settings.GEMINI_API_KEY or settings.LLM_API_KEY or "").strip()
             try:
                 system_prompt = (
                     "You are SubWise AI, an expert, prudent SMB financial advisor. "
@@ -1129,6 +1147,7 @@ class FinancialAssistantEngine:
                                     ],
                                     reporting_period=overview.monthly_briefing.reporting_period,
                                     disclaimer=disclaimer,
+                                    llm_provider_configured=True,
                                 )
             except Exception:
                 pass  # Gracefully fall back to deterministic answer
@@ -1164,4 +1183,5 @@ class FinancialAssistantEngine:
             ],
             reporting_period=overview.monthly_briefing.reporting_period,
             disclaimer=disclaimer,
+            llm_provider_configured=is_llm,
         )
