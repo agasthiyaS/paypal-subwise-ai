@@ -324,4 +324,47 @@ export const budgetsAPI = {
   },
 };
 
+// ─── Phase 3: Financial Intelligence (Consumer) ───────────────────────────────
+export const intelligenceAPI = {
+  /**
+   * Unified consumer financial intelligence: spending analysis, health score,
+   * top recommendations, and forecast snapshot.
+   */
+  getUnified: async () => {
+    const res = await apiClient.get('/financial-intelligence/unified');
+    return res.data;
+  },
+  getSpendingAnalysis: async (params = {}) => {
+    const res = await apiClient.get('/financial-intelligence/spending-analysis', { params });
+    return res.data;
+  },
+  getHealthScore: async () => {
+    const res = await apiClient.get('/financial-intelligence/health-score');
+    return res.data;
+  },
+  getForecastScenarios: async (params = {}) => {
+    const res = await apiClient.get('/financial-intelligence/forecast-scenarios', { params });
+    return res.data;
+  },
+};
+
+// ─── Phase 4: Smart Savings Discovery ────────────────────────────────────────
+export const savingsAPI = {
+  /** Personalized savings opportunities matched to user's active subscriptions */
+  getOpportunities: async () => {
+    const res = await apiClient.get('/savings-discovery');
+    return res.data;
+  },
+  /** Full verified vendor comparison catalog */
+  getCatalog: async () => {
+    const res = await apiClient.get('/savings-discovery/catalog');
+    return res.data;
+  },
+  /** Search vendor alternatives by keyword */
+  search: async (query) => {
+    const res = await apiClient.get('/savings-discovery/search', { params: { query } });
+    return res.data;
+  },
+};
+
 export default apiClient;

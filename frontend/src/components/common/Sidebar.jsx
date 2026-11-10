@@ -16,6 +16,8 @@ import {
   Building2,
   ShoppingCart,
   Zap,
+  Activity,
+  Search,
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -34,6 +36,8 @@ const Sidebar = () => {
     menuItems = [
       { to: '/dashboard', label: 'Personal Dashboard', icon: LayoutDashboard },
       { to: '/expenses', label: 'Income & Expenses', icon: TrendingDown },
+      { to: '/insights', label: 'AI Insights', icon: Activity, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
+      { to: '/savings-discovery', label: 'Savings Discovery', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
       { to: '/subscriptions', label: 'Subscriptions & Apps', icon: Layers },
       { to: '/forecast', label: 'Cash Flow & Income', icon: LineChart },
       { to: '/recommendations', label: 'AI Savings Advice', icon: Sparkles, badge: 'Tailored', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
@@ -48,6 +52,8 @@ const Sidebar = () => {
       { to: '/dashboard', label: 'Household Overview', icon: LayoutDashboard },
       { to: '/household', label: 'Household Workspace', icon: Home },
       { to: '/expenses', label: 'Shared Expenses', icon: TrendingDown },
+      { to: '/insights', label: 'AI Insights', icon: Activity, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
+      { to: '/savings-discovery', label: 'Savings Discovery', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
       { to: '/subscriptions', label: 'Shared Subscriptions', icon: Layers },
       { to: '/forecast', label: 'Household Cash Flow', icon: LineChart },
       { to: '/recommendations', label: 'Grocery & Utility AI', icon: Sparkles, badge: 'Deals', badgeColor: '#d97706', badgeBg: '#fef3c7', badgeBorder: '#fde68a' },
@@ -65,6 +71,7 @@ const Sidebar = () => {
       { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
       { to: '/simulator', label: 'Scenario Simulator', icon: Sliders },
       { to: '/recommendations', label: 'AI Recommendations', icon: Sparkles, badge: '4 New' },
+      { to: '/savings-discovery', label: 'Vendor Comparison', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
       { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
       { to: '/assistant', label: 'AI Assistant', icon: MessageSquare, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
     ];

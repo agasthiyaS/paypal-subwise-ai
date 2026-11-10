@@ -42,8 +42,7 @@ const EMPTY_MEMBER = {
   name: '',
   role: 'Member',
   avatar_color: '#0070ba',
-  monthly_budget: '',
-  email: '',
+  monthly_income_share: '',
 };
 
 const EMPTY_EXPENSE = {
@@ -119,8 +118,7 @@ export default function HouseholdPage() {
         name: memberForm.name.trim(),
         role: memberForm.role,
         avatar_color: memberForm.avatar_color,
-        monthly_budget: memberForm.monthly_budget ? parseFloat(memberForm.monthly_budget) : null,
-        email: memberForm.email ? memberForm.email.trim() : null,
+        monthly_income_share: memberForm.monthly_income_share ? parseFloat(memberForm.monthly_income_share) : 0.0,
       };
 
       if (editingMemberId) {
@@ -374,7 +372,7 @@ export default function HouseholdPage() {
 
                     <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
                       {m.expense_count} recorded expenses
-                      {m.monthly_budget && ` · Budget: $${fmt(m.monthly_budget)}`}
+                      {m.monthly_income_share > 0 && ` · Pool Contribution: $${fmt(m.monthly_income_share)}`}
                     </div>
                   </div>
                 ))}
@@ -484,8 +482,7 @@ export default function HouseholdPage() {
                               name: m.name,
                               role: m.role || 'Member',
                               avatar_color: m.avatar_color || '#0070ba',
-                              monthly_budget: m.monthly_budget ? String(m.monthly_budget) : '',
-                              email: m.email || '',
+                              monthly_income_share: m.monthly_income_share ? String(m.monthly_income_share) : '',
                             });
                             setEditingMemberId(m.id);
                             setShowMemberModal(true);
@@ -505,16 +502,10 @@ export default function HouseholdPage() {
                       </div>
                     </div>
 
-                    {m.email && (
-                      <div style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '0.5rem' }}>
-                        {m.email}
-                      </div>
-                    )}
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', background: '#fff', padding: '0.6rem 0.8rem', borderRadius: '8px', border: '1px solid #e2e8f0', marginTop: '0.5rem' }}>
-                      <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Target Monthly Cap:</span>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Monthly Pool Allocation:</span>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
-                        {m.monthly_budget ? `$${fmt(m.monthly_budget)}` : 'No limit'}
+                        {m.monthly_income_share > 0 ? `$${fmt(m.monthly_income_share)}` : 'Flexible'}
                       </span>
                     </div>
                   </div>
@@ -732,23 +723,12 @@ export default function HouseholdPage() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>Monthly Spending Cap (USD)</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>Monthly Household Pool Contribution (USD)</label>
                   <input
-                    type="number" step="1" min="1"
-                    value={memberForm.monthly_budget}
-                    onChange={e => setMemberForm(p => ({ ...p, monthly_budget: e.target.value }))}
-                    placeholder="Optional budget ceiling"
-                    style={{ width: '100%', padding: '0.6rem 0.9rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>Email Address</label>
-                  <input
-                    type="email"
-                    value={memberForm.email}
-                    onChange={e => setMemberForm(p => ({ ...p, email: e.target.value }))}
-                    placeholder="Optional email"
+                    type="number" step="1" min="0"
+                    value={memberForm.monthly_income_share}
+                    onChange={e => setMemberForm(p => ({ ...p, monthly_income_share: e.target.value }))}
+                    placeholder="Voluntary monthly pool allocation"
                     style={{ width: '100%', padding: '0.6rem 0.9rem', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   />
                 </div>
@@ -869,3 +849,4 @@ export default function HouseholdPage() {
     </div>
   );
 }
+

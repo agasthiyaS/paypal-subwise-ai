@@ -22,6 +22,8 @@ import ReportsPage from './pages/ReportsPage';
 import AssistantPage from './pages/AssistantPage';
 import ExpensesPage from './pages/ExpensesPage';
 import HouseholdPage from './pages/HouseholdPage';
+import SavingsDiscoveryPage from './pages/SavingsDiscoveryPage';
+import InsightsPage from './pages/InsightsPage';
 
 /* ============================================================ */
 /*  Loading Screen                                              */
@@ -124,6 +126,8 @@ function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/household" element={<HouseholdPage />} />
+        <Route path="/insights" element={<InsightsPage />} />
+        <Route path="/savings-discovery" element={<SavingsDiscoveryPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
         <Route path="/forecast" element={<ForecastPage />} />
         <Route path="/simulator" element={<SimulatorPage />} />

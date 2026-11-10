@@ -128,6 +128,14 @@ def update_expense(
     if not expense:
         raise HTTPException(status_code=404, detail="Expense entry not found.")
 
+    # Protect financial attributes of synchronized PayPal transactions
+    if expense.data_source == "paypal_sync":
+        if payload.amount is not None or payload.payment_method is not None or payload.expense_type is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot modify financial amounts, payment methods, or transaction types of synchronized PayPal transactions."
+            )
+
     if payload.amount is not None:
         expense.amount = abs(payload.amount)
     if payload.expense_type is not None:
@@ -174,8 +182,15 @@ def delete_expense(
     if not expense:
         raise HTTPException(status_code=404, detail="Expense entry not found.")
 
+    # Protect synchronized PayPal transactions from direct deletion
+    if expense.data_source == "paypal_sync":
+        raise HTTPException(
+            status_code=400,
+            detail="Synchronized PayPal transactions cannot be deleted directly from the expenses ledger."
+        )
+
     # Protect non-manual records if applicable
-    if expense.data_source not in ("manual", "paypal_sync", "demo"):
+    if expense.data_source not in ("manual", "demo"):
         raise HTTPException(status_code=400, detail="Cannot delete this synchronized transaction.")
 
     db.delete(expense)

@@ -332,3 +332,21 @@ def test_paypal_sync_projection_idempotency(db):
     assert exp.data_source == "paypal_sync"
     assert exp.categorization_method == "rules_engine"
     assert exp.category == "Shopping" or exp.category == "Food & Groceries"
+
+    # Verify PayPal sync protection: direct deletion is BLOCKED with 400
+    from fastapi import HTTPException
+    with pytest.raises(HTTPException) as exc_info:
+        delete_expense(expense_id=exp.id, current_user=user1, db=db)
+    assert exc_info.value.status_code == 400
+    assert "Synchronized PayPal transactions cannot be deleted" in exc_info.value.detail
+
+    # Verify PayPal sync protection: direct financial amount edit is BLOCKED with 400
+    with pytest.raises(HTTPException) as exc_info_edit:
+        update_expense(expense_id=exp.id, payload=ExpenseUpdate(amount=999.0), current_user=user1, db=db)
+    assert exc_info_edit.value.status_code == 400
+    assert "Cannot modify financial amounts" in exc_info_edit.value.detail
+
+    # Notes update is still permitted
+    upd_notes = update_expense(expense_id=exp.id, payload=ExpenseUpdate(notes="Reviewed receipt"), current_user=user1, db=db)
+    assert upd_notes.notes == "Reviewed receipt"
+    assert upd_notes.amount == 45.00

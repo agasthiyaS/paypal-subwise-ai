@@ -36,6 +36,8 @@ from app.services.subscription_analyzer import SubscriptionExpenseAnalyzer
 from app.services.recommendation_engine import RecommendationEngine
 from app.services.financial_intelligence_engine import FinancialIntelligenceEngine
 from app.services.report_engine import ReportEngine
+from app.services.vendor_comparison_service import VendorComparisonService
+from app.services.smart_spending_service import SmartSpendingService
 
 
 class FinancialAssistantEngine:
@@ -122,7 +124,32 @@ class FinancialAssistantEngine:
         """
         m = message.lower().strip()
 
-        # 1. Affordability / Purchase Simulation
+        # 1. Vendor Alternatives & Cheaper Plans (Phase 4)
+        if any(p in m for p in [
+            "cheaper alternative", "alternative to", "switch provider", "cheaper plan",
+            "cheaper tier", "compare vendor", "find alternatives", "cheaper options",
+            "alternatives for", "cheaper software", "cheaper streaming", "substitute",
+            "cheaper alternatives", "lower tier"
+        ]):
+            return "VENDOR_ALTERNATIVES"
+
+        # 2. Spending Breakdown & Top Outflows (Phase 3 & 4)
+        if any(p in m for p in [
+            "where did my money go", "where did most of my money go", "biggest expense",
+            "top spending", "highest spending", "which category", "spending breakdown",
+            "spending by category", "what did i spend the most on", "spending on groceries",
+            "which expenses increased", "unusual spending"
+        ]):
+            return "SPENDING_BREAKDOWN"
+
+        # 3. Budget Pacing & Health Status (Phase 3 & 4)
+        if any(p in m for p in [
+            "exceeding my budget", "over budget", "budget limit", "how much budget",
+            "am i over budget", "budget status", "budget remaining", "budget cushion"
+        ]):
+            return "BUDGET_STATUS"
+
+        # 4. Affordability / Purchase Simulation
         if any(p in m for p in [
             "can i afford", "can we afford", "should we buy", "should i buy",
             "can we buy", "can i buy", "what if we buy", "what if we subscribe",
@@ -287,6 +314,168 @@ class FinancialAssistantEngine:
             "SubWise AI is a decision-support assistant. All figures are derived strictly "
             "from connected PayPal transactions and deterministic forecasting formulas, not speculative forecasts."
         )
+
+        # ---------------------------------------------------------------------
+        # ROUTE 0A: VENDOR & ALTERNATIVE COMPARISON (Phase 4 AI Discovery)
+        # ---------------------------------------------------------------------
+        if intent == "VENDOR_ALTERNATIVES":
+            matched = VendorComparisonService.search_alternatives(message)
+            total_est_save = sum(item.recommended_alternative.estimated_monthly_savings for item in matched)
+
+            card = EvidenceCard(
+                title="Vendor Alternative Savings",
+                data_type="projected",
+                amount=total_est_save,
+                currency="USD",
+                details={
+                    "alternatives_count": len(matched),
+                    "annual_savings_potential": total_est_save * 12,
+                    "top_match": matched[0].current_service_name if matched else "None",
+                },
+                navigation_link="/recommendations",
+                badge_label=f"Save up to ${total_est_save:.2f}/mo",
+                badge_status="success",
+            )
+
+            res_md = (
+                f"### Economical Vendor Alternatives & Savings Analysis\n\n"
+                f"Based on verified Q4 2026 pricing benchmarks, here are high-value alternatives for your recurring expenses:\n\n"
+            )
+
+            for item in matched[:3]:
+                alt = item.recommended_alternative
+                res_md += (
+                    f"#### 🔍 **{item.current_service_name}** ({item.category})\n"
+                    f"- **Current Reference Tier:** {item.current_tier} at **${item.current_price:.2f}/{item.current_frequency}**\n"
+                    f"- **Recommended Alternative:** **{alt.name} — {alt.tier}** at **${alt.price:.2f}/{alt.billing_frequency}** (${alt.monthly_equivalent:.2f}/mo equivalent)\n"
+                    f"- **Estimated Monthly Recapture:** **${alt.estimated_monthly_savings:.2f}/mo** (${alt.estimated_annual_savings:.2f}/year)\n"
+                    f"- **Trade-offs / Caveats:** {'; '.join(alt.trade_offs)}\n\n"
+                )
+
+            res_md += f"> 💡 **Actionable Verdict:** Switching these services frees up an estimated **${total_est_save:.2f}/month** (${total_est_save * 12:.2f}/year) without sacrificing essential capabilities. Review the full catalog in [Savings Opportunities](/recommendations)."
+
+            return AssistantQueryResponse(
+                response_text=res_md,
+                is_ai_generated=False,
+                generation_model="SubWise Deterministic Vendor Discovery Engine",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[card],
+                suggested_followups=[
+                    "Where did most of my money go this month?",
+                    "How can I save $100 monthly?",
+                    "What are my upcoming renewals?",
+                ],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE 0B: SPENDING BREAKDOWN & TOP OUTFLOWS
+        # ---------------------------------------------------------------------
+        if intent == "SPENDING_BREAKDOWN":
+            total_exp = hist_actuals.historical_monthly_operating_expenses
+            sub_exp = forward_commit.confirmed_monthly_subscription_commitments
+            card = EvidenceCard(
+                title="Monthly Outflow Breakdown",
+                data_type="actual",
+                amount=total_exp,
+                currency="USD",
+                details={
+                    "total_expenses": total_exp,
+                    "subscription_expenses": sub_exp,
+                    "discretionary_expenses": max(0.0, total_exp - sub_exp),
+                },
+                navigation_link="/expenses",
+                badge_label=f"${total_exp:,.2f}/mo",
+                badge_status="neutral",
+            )
+
+            sb_md = (
+                f"### Spending Analysis & Outflow Allocation for **{company_name}**\n\n"
+                f"- **Total Monthly Outflows:** **${total_exp:,.2f}**\n"
+                f"- **Confirmed Recurring Subscriptions:** **${sub_exp:,.2f}/mo** ({(sub_exp / total_exp * 100) if total_exp > 0 else 0:.1f}% of outflows)\n"
+                f"- **Discretionary & Variable Outflows:** **${max(0.0, total_exp - sub_exp):,.2f}/mo**\n\n"
+            )
+
+            if subscriptions:
+                top_subs = sorted(subscriptions, key=lambda s: float(getattr(s, 'latest_amount', 0.0) or 0.0), reverse=True)[:5]
+                sb_md += "**Top Recurring Commitments:**\n\n| Service | Amount | Cadence |\n| :--- | :--- | :--- |\n"
+                for s in top_subs:
+                    sb_md += f"| **{s.vendor_name}** | ${float(getattr(s, 'latest_amount', 0.0) or 0.0):.2f} | {s.cadence or 'monthly'} |\n"
+
+            sb_md += "\nView detailed category charts and historical trends on the [Expenses Page](/expenses)."
+
+            return AssistantQueryResponse(
+                response_text=sb_md,
+                is_ai_generated=False,
+                generation_model="SubWise Deterministic Spending Intelligence",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[card],
+                suggested_followups=[
+                    "Find cheaper alternatives for my subscriptions",
+                    "Am I exceeding my monthly budget?",
+                    "What is my financial health score?",
+                ],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE 0C: BUDGET PACING & HEALTH
+        # ---------------------------------------------------------------------
+        if intent == "BUDGET_STATUS":
+            budget_limit = float(business.monthly_baseline_revenue or 3500.0)
+            spent = hist_actuals.historical_monthly_operating_expenses
+            rem = budget_limit - spent
+            pct = (spent / budget_limit * 100) if budget_limit > 0 else 0.0
+
+            card = EvidenceCard(
+                title="Budget Utilization",
+                data_type="actual",
+                amount=spent,
+                currency="USD",
+                details={
+                    "monthly_limit": budget_limit,
+                    "remaining_amount": rem,
+                    "utilization_percent": pct,
+                },
+                navigation_link="/expenses",
+                badge_label=f"{pct:.1f}% Used",
+                badge_status="success" if pct <= 85 else ("warning" if pct <= 100 else "danger"),
+            )
+
+            status_str = "Within Budget" if rem >= 0 else "Over Budget"
+            b_md = (
+                f"### Budget Pacing Status: **{status_str}**\n\n"
+                f"- **Target Monthly Budget Limit:** **${budget_limit:,.2f}**\n"
+                f"- **Current Month Expenses:** **${spent:,.2f}** ({pct:.1f}% consumed)\n"
+                f"- **Remaining Financial Cushion:** **${rem:,.2f}**\n\n"
+            )
+
+            if rem >= 0:
+                b_md += f"> ✅ You have a **${rem:,.2f}** safety cushion remaining for this billing cycle.\n\n"
+            else:
+                b_md += f"> ⚠️ Outflows exceed your monthly target ceiling by **${abs(rem):,.2f}**. Consider trimming non-essential subscriptions or takeout orders.\n\n"
+
+            b_md += "Manage individual category limits on the [Budget Manager](/expenses)."
+
+            return AssistantQueryResponse(
+                response_text=b_md,
+                is_ai_generated=False,
+                generation_model="SubWise Deterministic Budget Engine",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[card],
+                suggested_followups=[
+                    "Where did most of my money go this month?",
+                    "Find cheaper alternatives for subscriptions",
+                    "What is our projected cash runway?",
+                ],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
 
         # ---------------------------------------------------------------------
         # ROUTE 1: AFFORDABILITY CHECK (SIMULATION)

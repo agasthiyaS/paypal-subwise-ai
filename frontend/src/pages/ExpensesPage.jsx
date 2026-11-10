@@ -535,16 +535,22 @@ export default function ExpensesPage() {
                           {isIncome ? '+' : '-'}${Number(exp.amount).toFixed(2)}
                         </td>
                         <td style={{ padding: '0.75rem' }}>
-                          {exp.data_source === 'paypal' ? (
-                            <span style={{ fontSize: '0.72rem', background: '#eff6ff', color: '#0070ba', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>PayPal</span>
+                          {(exp.data_source === 'paypal_sync' || exp.data_source === 'paypal') ? (
+                            <span style={{ fontSize: '0.72rem', background: '#eff6ff', color: '#0070ba', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700, border: '1px solid #bfdbfe' }}>
+                              PayPal
+                            </span>
                           ) : exp.categorization_method === 'rules_engine' ? (
-                            <span style={{ fontSize: '0.72rem', background: '#ecfdf5', color: '#059669', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>Auto-detected</span>
+                            <span style={{ fontSize: '0.72rem', background: '#ecfdf5', color: '#059669', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700, border: '1px solid #a7f3d0' }}>
+                              Auto-detected
+                            </span>
                           ) : (
-                            <span style={{ fontSize: '0.72rem', background: '#f8fafc', color: '#94a3b8', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 600 }}>Manual</span>
+                            <span style={{ fontSize: '0.72rem', background: '#f8fafc', color: '#64748b', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 600, border: '1px solid #e2e8f0' }}>
+                              Manual
+                            </span>
                           )}
                         </td>
                         <td style={{ padding: '0.75rem' }}>
-                          {exp.data_source !== 'paypal' && (
+                          {exp.data_source !== 'paypal_sync' && exp.data_source !== 'paypal' ? (
                             <div style={{ display: 'flex', gap: '0.4rem' }}>
                               <button onClick={() => handleEdit(exp)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3b82f6', padding: '0.25rem' }} title="Edit">
                                 <Edit3 size={15} />
@@ -553,6 +559,10 @@ export default function ExpensesPage() {
                                 <Trash2 size={15} />
                               </button>
                             </div>
+                          ) : (
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', fontStyle: 'italic' }}>
+                              Synced
+                            </span>
                           )}
                         </td>
                       </tr>
