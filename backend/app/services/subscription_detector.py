@@ -186,13 +186,22 @@ class SubscriptionDetector:
                             f"Confirmed {cadence} subscription supported by {tx_count} recurring payments with steady cadence."
                         )
                 elif is_known_saas:
-                    # Recognized SaaS provider with irregular intervals (e.g. usage-based threshold billing)
-                    detection_type = "confirmed"
-                    confidence = 0.78
-                    detection_reason = (
-                        f"Recurring payments to recognized SaaS provider ({vendor_name}) with flexible interval "
-                        f"(median {median_delta:.0f} days). Classified as {cadence} subscription."
-                    )
+                    if median_delta < 5:
+                        # Multiple payments on same or adjacent days: cold-start testing, not a recurring cadence
+                        detection_type = "potential"
+                        confidence = 0.70
+                        detection_reason = (
+                            f"Multiple payments detected on the same or adjacent days for recognized SaaS provider ({vendor_name}) "
+                            f"(median delta {median_delta:.0f} days). Classified as potential {cadence} subscription awaiting recurring billing cycle."
+                        )
+                    else:
+                        # Recognized SaaS provider with flexible/usage intervals
+                        detection_type = "confirmed"
+                        confidence = 0.78
+                        detection_reason = (
+                            f"Recurring payments to recognized SaaS provider ({vendor_name}) with flexible interval "
+                            f"(median {median_delta:.0f} days). Classified as {cadence} subscription."
+                        )
                 else:
                     # Unknown vendor with highly irregular intervals
                     detection_type = "uncertain"

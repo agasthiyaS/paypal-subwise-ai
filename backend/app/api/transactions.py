@@ -11,7 +11,12 @@ from app.models.subscription import Subscription
 from app.models.recommendation import Recommendation
 from app.schemas.transaction import TransactionResponse, SyncResultResponse
 from app.services.auth_service import get_current_user
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_transactions_query,
+    get_environment_transactions,
+    get_environment_subscriptions
+)
 from app.services.paypal_client import (
     PayPalClient,
     PayPalError,
@@ -44,7 +49,7 @@ def get_transactions(
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    query = db.query(Transaction).filter(Transaction.business_id == biz.id)
+    query = get_environment_transactions_query(db=db, biz=biz, request=request)
     if category:
         query = query.filter(Transaction.category == category)
     if vendor:
@@ -207,14 +212,14 @@ def sync_transactions(
 
     db.flush()
 
-    # Retrieve all current transactions for this business for subscription detection
-    all_biz_txs = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    # Retrieve all transactions for this environment for subscription detection
+    all_biz_txs = get_environment_transactions(db=db, biz=biz, request=request, env=target_mode)
 
     # Trigger Subscription Identification Engine
     detected_subs = SubscriptionDetector.identify_subscriptions(all_biz_txs, biz.id)
 
     # Upsert Subscriptions
-    existing_subs = {s.vendor_name.lower(): s for s in db.query(Subscription).filter(Subscription.business_id == biz.id).all()}
+    existing_subs = {s.vendor_name.lower(): s for s in get_environment_subscriptions(db=db, biz=biz, request=request, env=target_mode)}
     active_sub_objs: List[Subscription] = []
 
     for sub_candidate in detected_subs:
@@ -239,8 +244,13 @@ def sync_transactions(
 
     # Trigger Recommendation Engine
     recs = RecommendationEngine.generate_recommendations(biz, active_sub_objs, all_biz_txs)
-    # Refresh recommendations for current state
-    db.query(Recommendation).filter(Recommendation.business_id == biz.id).delete()
+    # Refresh recommendations for active environment
+    active_sub_ids = [s.id for s in active_sub_objs if s.id]
+    if active_sub_ids:
+        db.query(Recommendation).filter(
+            Recommendation.business_id == biz.id,
+            Recommendation.subscription_id.in_(active_sub_ids)
+        ).delete(synchronize_session=False)
     for rec in recs:
         db.add(rec)
 

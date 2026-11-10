@@ -8,7 +8,11 @@ from app.models.transaction import Transaction
 from app.schemas.forecast import ForecastResponse
 from app.services.auth_service import get_current_user
 from app.services.forecast_engine import ForecastEngine
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_subscriptions,
+    get_environment_transactions,
+)
 
 router = APIRouter(prefix="/forecast", tags=["Cash Flow Forecast"])
 
@@ -22,8 +26,8 @@ def get_cashflow_forecast(
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
 
     forecast_data = ForecastEngine.generate_forecast(
         business=biz,

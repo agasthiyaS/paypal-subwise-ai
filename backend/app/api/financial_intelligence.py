@@ -14,7 +14,11 @@ from app.models.transaction import Transaction
 from app.schemas.financial_intelligence import FinancialIntelligenceOverview
 from app.services.auth_service import get_current_user
 from app.services.financial_intelligence_engine import FinancialIntelligenceEngine
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_subscriptions,
+    get_environment_transactions,
+)
 
 router = APIRouter(prefix="/financial-intelligence", tags=["Financial Intelligence"])
 
@@ -31,8 +35,8 @@ def get_financial_intelligence_overview(
     """
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
 
     return FinancialIntelligenceEngine.generate_overview(
         business=biz,

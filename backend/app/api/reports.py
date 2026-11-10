@@ -20,7 +20,11 @@ from app.models.subscription import Subscription
 from app.models.transaction import Transaction
 from app.services.auth_service import get_current_user
 from app.services.report_engine import ReportEngine
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_transactions,
+    get_environment_subscriptions,
+)
 from app.schemas.report import (
     MonthlyFinancialReport,
     SubscriptionExpenseReport,
@@ -51,8 +55,8 @@ def get_monthly_financial_report(
     confirmed SaaS commitments, potential trials, and net operating cash flows.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     return ReportEngine.generate_monthly_financial_report(
         business=biz,
@@ -75,8 +79,8 @@ def get_subscription_expense_report(
     monthly equivalents, annual run-rates, price creep alerts, and category distributions.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     return ReportEngine.generate_subscription_expense_report(
         business=biz,
@@ -96,8 +100,8 @@ def get_upcoming_renewal_report(
     highlighting renewal clustering and concentration spikes.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     return ReportEngine.generate_upcoming_renewal_report(
         business=biz,
@@ -117,8 +121,8 @@ def get_cash_flow_forecast_report(
     and Conservative multi-scenario timelines and assumptions disclosures.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     return ReportEngine.generate_forecast_report(
         business=biz,
@@ -141,8 +145,8 @@ def get_comprehensive_financial_report(
     subscription overhead, calendar renewals, forecast scenarios, and Financial Health Index.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     return ReportEngine.generate_comprehensive_report(
         business=biz,
@@ -169,8 +173,8 @@ def export_csv_report(
     applied to all cells.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     csv_content = ReportEngine.generate_csv(
         export_type=export_type,
@@ -209,8 +213,8 @@ def export_pdf_report(
     styling, dynamic 'Page X of Y' numbering, and methodology disclosures.
     """
     biz = _get_user_business(current_user, db, request=request)
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
 
     pdf_bytes = ReportEngine.generate_pdf(
         report_type=report_type,

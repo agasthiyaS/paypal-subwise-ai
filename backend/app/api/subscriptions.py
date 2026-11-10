@@ -15,7 +15,11 @@ from app.schemas.subscription import (
 )
 from app.services.auth_service import get_current_user
 from app.services.subscription_analyzer import SubscriptionExpenseAnalyzer
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_subscriptions,
+    get_environment_transactions,
+)
 
 router = APIRouter(prefix="/subscriptions", tags=["Subscriptions"])
 
@@ -26,7 +30,7 @@ def get_subscriptions(
     db: Session = Depends(get_db)
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
     
     active_subs = [s for s in subs if s.status != "cancelled"]
     monthly_spend = sum(
@@ -56,7 +60,11 @@ def get_subscriptions(
     potential_subs = [s for s in active_subs if s.detection_type == "potential"]
     confirmed_subs = [s for s in active_subs if s.detection_type == "confirmed"]
 
-    recs = db.query(Recommendation).filter(Recommendation.business_id == biz.id).all()
+    active_sub_ids = {s.id for s in active_subs if s.id}
+    recs = [
+        r for r in db.query(Recommendation).filter(Recommendation.business_id == biz.id).all()
+        if r.subscription_id in active_sub_ids
+    ]
     potential_savings = sum(r.potential_monthly_saving for r in recs)
     if not potential_savings and (zombies or at_risk):
         potential_savings = sum(s.latest_amount for s in zombies) + sum(s.latest_amount * 0.2 for s in at_risk)
@@ -87,8 +95,8 @@ def get_subscription_expense_analysis(
     db: Session = Depends(get_db)
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
 
     return SubscriptionExpenseAnalyzer.analyze(subscriptions=subs, transactions=txns, currency="USD")
 

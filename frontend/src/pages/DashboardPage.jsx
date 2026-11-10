@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { transactionsAPI, subscriptionsAPI, recommendationsAPI, paypalAPI, demoAPI } from '../services/api';
-import { classifyFinancialTransactions, isValidOperatingTransaction } from '../utils/financialClassification';
+import { classifyFinancialTransactions, isValidOperatingTransaction, isCurrencyConversionLeg } from '../utils/financialClassification';
 import PayPalConnectModal from '../components/settings/PayPalConnectModal';
 import SandboxPaymentModal from '../components/settings/SandboxPaymentModal';
 import StatCard from '../components/common/StatCard';
@@ -60,7 +60,7 @@ const DashboardPage = () => {
     try {
       setLoadingData(true);
       const [txRes, subRes, recRes, statusRes, analysisRes] = await Promise.allSettled([
-        transactionsAPI.getTransactions({ limit: 100 }),
+        transactionsAPI.getTransactions({ limit: 500 }),
         subscriptionsAPI.getSubscriptions(),
         recommendationsAPI.getRecommendations(),
         paypalAPI.getStatus(),
@@ -205,8 +205,21 @@ const DashboardPage = () => {
     return name;
   }, [business?.company_name, business?.is_demo, isDemo]);
 
+  // Environment-aware transaction segregation (defense in depth)
+  const filteredTransactions = useMemo(() => {
+    if (!Array.isArray(transactions)) return [];
+    if (isDemo) {
+      return transactions.filter(t => t.data_source === 'demo' || t.data_source === 'demo_fixture' || t.is_simulated || (t.paypal_transaction_id && t.paypal_transaction_id.startsWith('DEMO_')));
+    }
+    if (isLive) {
+      return transactions.filter(t => t.data_source === 'live' && !t.is_simulated && !(t.paypal_transaction_id && t.paypal_transaction_id.startsWith('DEMO_')));
+    }
+    // Sandbox
+    return transactions.filter(t => t.data_source === 'sandbox' || (!t.data_source && !t.is_simulated && !(t.paypal_transaction_id && t.paypal_transaction_id.startsWith('DEMO_'))));
+  }, [transactions, isDemo, isLive]);
+
   // Derive metrics strictly from verified transactions & subscriptions
-  const hasTransactions = transactions.length > 0;
+  const hasTransactions = filteredTransactions.length > 0;
   const activeSubsCount = subscriptionSummary?.total_active_count || 0;
   const totalSubSpend = subscriptionSummary?.total_monthly_spend || 0.0;
   const potentialSavings = subscriptionSummary?.potential_monthly_savings || 0.0;
@@ -215,8 +228,8 @@ const DashboardPage = () => {
   // Operating income vs non-operating funding & currency conversion segregation
   // Initial balances, account funding, SubWise test payments, and currency conversion legs are isolated.
   const classification = useMemo(() => {
-    return classifyFinancialTransactions(transactions, business?.currency || 'USD');
-  }, [transactions, business?.currency]);
+    return classifyFinancialTransactions(filteredTransactions, business?.currency || 'USD');
+  }, [filteredTransactions, business?.currency]);
 
   const monthlyIncome = classification.operatingRevenue;
   const monthlyExpenses = classification.operatingExpenses;
@@ -230,7 +243,9 @@ const DashboardPage = () => {
     const baseCurr = (business?.currency || 'USD').toUpperCase();
     let baseTotal = 0;
     const nonBaseTotals = {};
-    transactions.forEach((tx) => {
+    filteredTransactions.forEach((tx) => {
+      // Exclude currency conversion legs matching forecast_engine.py calculation
+      if (isCurrencyConversionLeg(tx, filteredTransactions)) return;
       const amt = Number(tx.net_amount) || Number(tx.gross_amount) || 0;
       const curr = (tx.currency || baseCurr).toUpperCase();
       if (curr === baseCurr) {
@@ -244,7 +259,7 @@ const DashboardPage = () => {
       if (Math.abs(netNonBase) > 0.01) total += netNonBase;
     });
     return Math.round(total * 100) / 100;
-  }, [transactions, hasTransactions, business?.currency]);
+  }, [filteredTransactions, hasTransactions, business?.currency]);
 
   // Runway calculation: only possible when operating expenses and verified balance exist
   const runwayStatus = useMemo(() => {
@@ -268,8 +283,8 @@ const DashboardPage = () => {
     const hasOperatingData = (monthlyIncome > 0 || monthlyExpenses > 0 || totalSubSpend > 0);
     
     let daysSpan = 0;
-    if (transactions.length > 1) {
-      const dates = transactions.map(t => new Date(t.transaction_date).getTime()).sort();
+    if (filteredTransactions.length > 1) {
+      const dates = filteredTransactions.map(t => new Date(t.transaction_date).getTime()).sort();
       daysSpan = (dates[dates.length - 1] - dates[0]) / (1000 * 60 * 60 * 24);
     }
 
@@ -305,13 +320,13 @@ const DashboardPage = () => {
       score,
       displayText: `${score}`,
       label: hCol.label,
-      subtext: `Computed from ${transactions.length} verified operating transactions`,
+      subtext: `Computed from ${filteredTransactions.length} verified operating transactions`,
       color: hCol.text,
       bg: hCol.bg,
       border: hCol.border,
       barWidth: `${score}%`
     };
-  }, [hasTransactions, monthlyIncome, monthlyExpenses, totalSubSpend, transactions, runwayStatus]);
+  }, [hasTransactions, monthlyIncome, monthlyExpenses, totalSubSpend, filteredTransactions, runwayStatus]);
 
   // Build chart history exclusively from verified operating transactions (no invented bars for funding or FX conversion legs)
   const monthlyChartData = useMemo(() => {
@@ -487,7 +502,7 @@ const DashboardPage = () => {
                 Transactions / Last Sync
               </div>
               <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.15rem' }}>
-                {transactions.length} ledger records ({operatingCount} operating) · {isDemo ? 'Reproducible Dataset' : formatLastSync(business?.last_synced_at)}
+                {filteredTransactions.length} ledger records ({operatingCount} operating) · {isDemo ? 'Reproducible Dataset' : formatLastSync(business?.last_synced_at)}
               </div>
             </div>
 

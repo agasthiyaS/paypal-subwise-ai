@@ -4,12 +4,15 @@ Provides unified tenant resolution supporting both Real Sandbox profiles
 and isolated Demonstration profiles (DemoTech Solutions).
 """
 import logging
-from typing import Optional, List
+from typing import Optional, List, Set
 from fastapi import Request, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
+from sqlalchemy import or_, not_
 
 from app.models.user import User
 from app.models.business import BusinessProfile
+from app.models.transaction import Transaction
+from app.models.subscription import Subscription
 
 logger = logging.getLogger("subwise_ai.services.business")
 
@@ -161,4 +164,145 @@ def switch_active_business(
     db.refresh(user)
     db.refresh(target_biz)
     return target_biz
+
+
+def get_business_environment(
+    biz: BusinessProfile,
+    request: Optional[Request] = None,
+) -> str:
+    """
+    Determines whether the active evaluation environment is 'demo', 'sandbox', or 'live'.
+    """
+    if request:
+        demo_hdr = request.headers.get("X-SubWise-Demo-Mode", "").lower().strip()
+        if demo_hdr in ("true", "1", "yes"):
+            return "demo"
+        demo_param = (
+            request.query_params.get("demo_mode")
+            or request.query_params.get("demo")
+        )
+        if demo_param is not None and str(demo_param).lower().strip() in ("true", "1", "yes"):
+            return "demo"
+
+    if getattr(biz, "is_demo", False):
+        return "demo"
+
+    mode = (getattr(biz, "paypal_mode", "") or "sandbox").lower().strip()
+    if mode in ("live", "demo"):
+        return mode
+    return "sandbox"
+
+
+def get_environment_transactions_query(
+    db: Session,
+    biz: BusinessProfile,
+    request: Optional[Request] = None,
+    env: Optional[str] = None,
+) -> Query:
+    """
+    Returns an SQLAlchemy Query for Transactions strictly filtered to the active environment:
+    - 'demo': ONLY demo transactions (data_source in ('demo', 'demo_fixture'), is_simulated=True, or DEMO_% ID)
+    - 'sandbox': ONLY genuine Sandbox transactions (data_source == 'sandbox', is_simulated=False, not DEMO_%)
+    - 'live': ONLY genuine Live transactions (data_source == 'live', is_simulated=False, not DEMO_%)
+    """
+    environment = env or get_business_environment(biz, request)
+    base_query = db.query(Transaction).filter(Transaction.business_id == biz.id)
+
+    if environment == "demo":
+        return base_query.filter(
+            or_(
+                Transaction.data_source.in_(["demo", "demo_fixture"]),
+                Transaction.is_simulated == True,
+                Transaction.paypal_transaction_id.like("DEMO_%"),
+            )
+        )
+    elif environment == "live":
+        return base_query.filter(
+            Transaction.data_source == "live",
+            Transaction.is_simulated == False,
+            or_(
+                Transaction.paypal_transaction_id == None,
+                not_(Transaction.paypal_transaction_id.like("DEMO_%")),
+            ),
+        )
+    else:  # sandbox
+        return base_query.filter(
+            Transaction.data_source == "sandbox",
+            Transaction.is_simulated == False,
+            or_(
+                Transaction.paypal_transaction_id == None,
+                not_(Transaction.paypal_transaction_id.like("DEMO_%")),
+            ),
+        )
+
+
+def get_environment_transactions(
+    db: Session,
+    biz: BusinessProfile,
+    request: Optional[Request] = None,
+    env: Optional[str] = None,
+) -> List[Transaction]:
+    """Returns all transactions for biz in the active environment."""
+    return get_environment_transactions_query(db, biz, request, env).all()
+
+
+def get_environment_subscriptions(
+    db: Session,
+    biz: BusinessProfile,
+    request: Optional[Request] = None,
+    env: Optional[str] = None,
+) -> List[Subscription]:
+    """
+    Returns Subscription records strictly belonging to the active environment.
+    - If demo: returns demo subscriptions.
+    - If sandbox/live: returns ONLY subscriptions that have supporting outbound expense
+      transactions in the genuine environment.
+    Guarantees demo subscriptions are never presented in sandbox/live mode,
+    while safely preserving all subscription records in the database.
+    """
+    environment = env or get_business_environment(biz, request)
+    all_subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+
+    if getattr(biz, "is_demo", False) or environment == "demo":
+        if getattr(biz, "is_demo", False):
+            return all_subs
+        demo_vendors = {
+            v.lower().strip()
+            for (v,) in db.query(Transaction.normalized_vendor)
+            .filter(
+                Transaction.business_id == biz.id,
+                or_(
+                    Transaction.data_source.in_(["demo", "demo_fixture"]),
+                    Transaction.is_simulated == True,
+                    Transaction.paypal_transaction_id.like("DEMO_%"),
+                ),
+                Transaction.gross_amount < 0,
+            )
+            .distinct()
+            .all()
+            if v
+        }
+        return [s for s in all_subs if (s.vendor_name or "").lower().strip() in demo_vendors]
+
+    # Sandbox or Live:
+    genuine_vendors = {
+        v.lower().strip()
+        for (v,) in db.query(Transaction.normalized_vendor)
+        .filter(
+            Transaction.business_id == biz.id,
+            Transaction.data_source == environment,
+            Transaction.is_simulated == False,
+            or_(
+                Transaction.paypal_transaction_id == None,
+                not_(Transaction.paypal_transaction_id.like("DEMO_%")),
+            ),
+            Transaction.gross_amount < 0,
+        )
+        .distinct()
+        .all()
+        if v
+    }
+
+    return [s for s in all_subs if (s.vendor_name or "").lower().strip() in genuine_vendors]
+
 

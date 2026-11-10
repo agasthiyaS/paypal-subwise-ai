@@ -31,6 +31,11 @@ from app.services.paypal_client import (
 from app.services.normalizer import TransactionNormalizer
 from app.services.subscription_detector import SubscriptionDetector
 from app.services.recommendation_engine import RecommendationEngine
+from app.services.business_service import (
+    get_active_business,
+    get_environment_transactions,
+    get_environment_subscriptions,
+)
 
 logger = logging.getLogger("subwise_ai.api.paypal")
 
@@ -162,7 +167,7 @@ def sync_paypal_transactions(
     - Triggers subscription detection engine and refreshes AI recommendations.
     - Never substitutes synthetic demo data.
     """
-    biz = db.query(BusinessProfile).filter(BusinessProfile.user_id == current_user.id).first()
+    biz = get_active_business(current_user=current_user, db=db)
     if not biz:
         raise HTTPException(status_code=404, detail="Business profile not found.")
 
@@ -300,13 +305,13 @@ def sync_paypal_transactions(
 
     db.flush()
 
-    # Subscription Detection on real transactions
-    all_biz_txs = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    # Subscription Detection on real transactions for this environment
+    all_biz_txs = get_environment_transactions(db=db, biz=biz, env=target_mode)
     detected_subs = SubscriptionDetector.identify_subscriptions(all_biz_txs, biz.id)
 
     existing_subs = {
         s.vendor_name.lower(): s
-        for s in db.query(Subscription).filter(Subscription.business_id == biz.id).all()
+        for s in get_environment_subscriptions(db=db, biz=biz, env=target_mode)
     }
     active_sub_objs: list[Subscription] = []
 
@@ -332,7 +337,12 @@ def sync_paypal_transactions(
 
     # Refresh recommendations based on actual subscriptions and transactions
     recs = RecommendationEngine.generate_recommendations(biz, active_sub_objs, all_biz_txs)
-    db.query(Recommendation).filter(Recommendation.business_id == biz.id).delete()
+    active_sub_ids = [s.id for s in active_sub_objs if s.id]
+    if active_sub_ids:
+        db.query(Recommendation).filter(
+            Recommendation.business_id == biz.id,
+            Recommendation.subscription_id.in_(active_sub_ids)
+        ).delete(synchronize_session=False)
     for rec in recs:
         db.add(rec)
 
@@ -371,7 +381,7 @@ def get_sync_status(
     Returns the current synchronization status, total transaction and subscription counts,
     and PayPal connection state.
     """
-    biz = db.query(BusinessProfile).filter(BusinessProfile.user_id == current_user.id).first()
+    biz = get_active_business(current_user=current_user, db=db)
     if not biz:
         raise HTTPException(status_code=404, detail="Business profile not found.")
 
@@ -408,7 +418,7 @@ def create_test_order(
     Restricted to Sandbox environment only.
     Returns the PayPal approval URL for the buyer to approve the payment.
     """
-    biz = db.query(BusinessProfile).filter(BusinessProfile.user_id == current_user.id).first()
+    biz = get_active_business(current_user=current_user, db=db)
     if not biz:
         raise HTTPException(status_code=404, detail="Business profile not found.")
 
@@ -468,7 +478,7 @@ def capture_test_order(
     - Persists the actual capture transaction into PostgreSQL under the user's business profile.
     - Triggers transaction sync to align with the ledger and Transaction Search API.
     """
-    biz = db.query(BusinessProfile).filter(BusinessProfile.user_id == current_user.id).first()
+    biz = get_active_business(current_user=current_user, db=db)
     if not biz:
         raise HTTPException(status_code=404, detail="Business profile not found.")
 

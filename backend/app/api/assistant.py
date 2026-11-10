@@ -21,7 +21,11 @@ from app.schemas.assistant import (
 )
 from app.services.auth_service import get_current_user
 from app.services.financial_assistant_engine import FinancialAssistantEngine
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_subscriptions,
+    get_environment_transactions,
+)
 
 router = APIRouter(prefix="/assistant", tags=["Financial Assistant"])
 
@@ -42,17 +46,8 @@ def query_financial_assistant(
     """
     biz = get_active_business(current_user=current_user, db=db, request=http_request)
 
-    subscriptions = (
-        db.query(Subscription)
-        .filter(Subscription.business_id == biz.id)
-        .all()
-    )
-
-    transactions = (
-        db.query(Transaction)
-        .filter(Transaction.business_id == biz.id)
-        .all()
-    )
+    subscriptions = get_environment_subscriptions(db=db, biz=biz, request=http_request)
+    transactions = get_environment_transactions(db=db, biz=biz, request=http_request)
 
     return FinancialAssistantEngine.process_query(
         business=biz,
@@ -74,17 +69,8 @@ def get_assistant_suggestions(
     """
     biz = get_active_business(current_user=current_user, db=db, request=http_request)
 
-    subscriptions = (
-        db.query(Subscription)
-        .filter(Subscription.business_id == biz.id)
-        .all()
-    )
-
-    transactions = (
-        db.query(Transaction)
-        .filter(Transaction.business_id == biz.id)
-        .all()
-    )
+    subscriptions = get_environment_subscriptions(db=db, biz=biz, request=http_request)
+    transactions = get_environment_transactions(db=db, biz=biz, request=http_request)
 
     return FinancialAssistantEngine.get_starter_suggestions(
         business=biz,

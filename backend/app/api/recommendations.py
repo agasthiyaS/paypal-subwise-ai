@@ -17,7 +17,11 @@ from app.schemas.recommendation import (
 )
 from app.services.auth_service import get_current_user
 from app.services.recommendation_engine import RecommendationEngine
-from app.services.business_service import get_active_business
+from app.services.business_service import (
+    get_active_business,
+    get_environment_subscriptions,
+    get_environment_transactions,
+)
 
 logger = logging.getLogger("subwise_ai.api.recommendations")
 
@@ -30,17 +34,24 @@ def get_recommendations(
     db: Session = Depends(get_db)
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    sub_ids = {s.id for s in subs if s.id}
+    active_vendors = {(s.vendor_name or "").lower().strip() for s in subs}
 
-    existing = db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
-    if not existing:
-        subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-        if subs:
-            txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
-            recs = RecommendationEngine.generate_recommendations(biz, subs, txns)
-            for r in recs:
-                db.add(r)
-            db.commit()
-            existing = db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
+    existing = [
+        r for r in db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
+        if (r.subscription_id in sub_ids) or ((r.vendor_name or "").lower().strip() in active_vendors)
+    ]
+    if not existing and subs:
+        txns = get_environment_transactions(db=db, biz=biz, request=request)
+        recs = RecommendationEngine.generate_recommendations(biz, subs, txns)
+        for r in recs:
+            db.add(r)
+        db.commit()
+        existing = [
+            r for r in db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
+            if (r.subscription_id in sub_ids) or ((r.vendor_name or "").lower().strip() in active_vendors)
+        ]
 
     return existing
 
@@ -52,16 +63,25 @@ def generate_recommendations(
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
 
     recs = RecommendationEngine.generate_recommendations(biz, subs, txns)
-    db.query(Recommendation).filter(Recommendation.business_id == biz.id).delete()
+    sub_ids = {s.id for s in subs if s.id}
+    if sub_ids:
+        db.query(Recommendation).filter(
+            Recommendation.business_id == biz.id,
+            Recommendation.subscription_id.in_(sub_ids)
+        ).delete(synchronize_session=False)
     for r in recs:
         db.add(r)
     db.commit()
 
-    return db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
+    active_vendors = {(s.vendor_name or "").lower().strip() for s in subs}
+    return [
+        r for r in db.query(Recommendation).filter(Recommendation.business_id == biz.id).order_by(Recommendation.potential_annual_saving.desc()).all()
+        if (r.subscription_id in sub_ids) or ((r.vendor_name or "").lower().strip() in active_vendors)
+    ]
 
 @router.post("/simulate-purchase", response_model=PurchaseSimulationResponse)
 def simulate_purchase(
@@ -76,8 +96,8 @@ def simulate_purchase(
     """
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id).all()
-    txns = db.query(Transaction).filter(Transaction.business_id == biz.id).all()
+    subs = get_environment_subscriptions(db=db, biz=biz, request=request)
+    txns = get_environment_transactions(db=db, biz=biz, request=request)
 
     return RecommendationEngine.simulate_purchase(biz, subs, txns, payload)
 
@@ -108,8 +128,13 @@ def get_ai_briefing(
 ):
     biz = get_active_business(current_user=current_user, db=db, request=request)
 
-    subs = db.query(Subscription).filter(Subscription.business_id == biz.id, Subscription.status != "cancelled").all()
-    recs = db.query(Recommendation).filter(Recommendation.business_id == biz.id, Recommendation.status == "pending").all()
+    subs = [s for s in get_environment_subscriptions(db=db, biz=biz, request=request) if s.status != "cancelled"]
+    sub_ids = {s.id for s in subs if s.id}
+    active_vendors = {(s.vendor_name or "").lower().strip() for s in subs}
+    recs = [
+        r for r in db.query(Recommendation).filter(Recommendation.business_id == biz.id, Recommendation.status == "pending").all()
+        if (r.subscription_id in sub_ids) or ((r.vendor_name or "").lower().strip() in active_vendors)
+    ]
 
     total_monthly = sum(s.latest_amount for s in subs)
     savings = sum(r.potential_monthly_saving for r in recs)
