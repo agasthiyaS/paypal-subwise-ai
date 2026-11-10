@@ -113,6 +113,15 @@ def test_admin_user_directory_and_role_update(admin_user: User, regular_user: Us
     assert demote_resp.status_code == 200
 
 
+def test_admin_cannot_demote_self(admin_user: User):
+    resp = client.put(
+        f"/api/v1/admin/users/{admin_user.id}/role?is_admin=false",
+        headers=_auth_header(admin_user)
+    )
+    assert resp.status_code == 400
+    assert "Cannot revoke your own" in resp.json()["detail"]
+
+
 # ==============================================================================
 # 2. VENDOR MANAGEMENT SYSTEM TESTS
 # ==============================================================================

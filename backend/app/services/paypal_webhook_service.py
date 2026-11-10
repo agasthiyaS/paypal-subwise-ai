@@ -314,6 +314,10 @@ class PayPalWebhookService:
     @classmethod
     def _handle_dispute_event(cls, resource: Dict[str, Any], event_type: str, db: Session):
         disputed_txs = resource.get("disputed_transactions", [])
+        dispute_outcome = resource.get("dispute_outcome", {})
+        outcome_code = (dispute_outcome.get("outcome_code") or "").upper()
+        dispute_state = (resource.get("status") or "").upper()
+
         for d_tx in disputed_txs:
             tx_id = d_tx.get("seller_transaction_id")
             if tx_id:
@@ -322,5 +326,11 @@ class PayPalWebhookService:
                     if "CREATED" in event_type:
                         tx.status = "DISPUTED"
                     elif "RESOLVED" in event_type:
-                        tx.status = "COMPLETED"
+                        # Accurately reflect resolution outcome rather than assuming merchant retained revenue
+                        if "BUYER" in outcome_code or "BUYER" in dispute_state:
+                            tx.status = "REFUNDED"
+                        elif "SELLER" in outcome_code or "SELLER" in dispute_state or "CANCEL" in outcome_code:
+                            tx.status = "COMPLETED"
+                        else:
+                            tx.status = "RESOLVED"
                     db.commit()

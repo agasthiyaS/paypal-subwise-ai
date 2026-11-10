@@ -170,6 +170,78 @@ def test_webhook_subscription_cancellation(db: Session, test_business: BusinessP
     db.commit()
 
 
+def test_webhook_dispute_resolution_buyer_vs_seller_outcome(db: Session, test_business: BusinessProfile):
+    # 1. Setup a test transaction
+    tx_id = f"TX-DISP-{int(datetime.datetime.utcnow().timestamp())}"
+    tx = Transaction(
+        business_id=test_business.id,
+        paypal_transaction_id=tx_id,
+        transaction_date=datetime.datetime.utcnow(),
+        raw_description="Dispute Subject Transaction",
+        normalized_vendor="Disputed Merchant",
+        category="Sales",
+        gross_amount=150.0,
+        net_amount=145.0,
+        currency="USD",
+        status="COMPLETED",
+        data_source="sandbox"
+    )
+    db.add(tx)
+    db.commit()
+
+    # 2. Receive dispute created event
+    ev_create = f"WH-DISP-CREATE-{int(datetime.datetime.utcnow().timestamp())}"
+    payload_create = {
+        "id": ev_create,
+        "event_type": "CUSTOMER.DISPUTE.CREATED",
+        "resource": {
+            "id": "DISP-001",
+            "disputed_transactions": [{"seller_transaction_id": tx_id}],
+            "status": "UNDER_REVIEW"
+        }
+    }
+    PayPalWebhookService.process_webhook_event(payload_create, {"x-subwise-webhook-simulation": "true"}, db)
+    db.refresh(tx)
+    assert tx.status == "DISPUTED"
+
+    # 3. Receive dispute resolved in BUYER favor -> status should be REFUNDED, not COMPLETED
+    ev_buyer_win = f"WH-DISP-BUYER-{int(datetime.datetime.utcnow().timestamp())}"
+    payload_buyer_win = {
+        "id": ev_buyer_win,
+        "event_type": "CUSTOMER.DISPUTE.RESOLVED",
+        "resource": {
+            "id": "DISP-001",
+            "disputed_transactions": [{"seller_transaction_id": tx_id}],
+            "status": "RESOLVED",
+            "dispute_outcome": {"outcome_code": "RESOLVED_BUYER_FAVOUR"}
+        }
+    }
+    PayPalWebhookService.process_webhook_event(payload_buyer_win, {"x-subwise-webhook-simulation": "true"}, db)
+    db.refresh(tx)
+    assert tx.status == "REFUNDED"
+
+    # 4. Receive dispute resolved in SELLER favor -> status should return to COMPLETED
+    ev_seller_win = f"WH-DISP-SELLER-{int(datetime.datetime.utcnow().timestamp())}"
+    payload_seller_win = {
+        "id": ev_seller_win,
+        "event_type": "CUSTOMER.DISPUTE.RESOLVED",
+        "resource": {
+            "id": "DISP-001",
+            "disputed_transactions": [{"seller_transaction_id": tx_id}],
+            "status": "RESOLVED",
+            "dispute_outcome": {"outcome_code": "RESOLVED_SELLER_FAVOUR"}
+        }
+    }
+    PayPalWebhookService.process_webhook_event(payload_seller_win, {"x-subwise-webhook-simulation": "true"}, db)
+    db.refresh(tx)
+    assert tx.status == "COMPLETED"
+
+    # Cleanup
+    db.query(WebhookEvent).filter(WebhookEvent.paypal_event_id.in_([ev_create, ev_buyer_win, ev_seller_win])).delete()
+    db.delete(tx)
+    db.commit()
+
+
 # ==============================================================================
 # 3. RECONCILIATION SERVICE TESTS
 # ==============================================================================

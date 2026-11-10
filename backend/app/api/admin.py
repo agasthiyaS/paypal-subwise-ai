@@ -127,6 +127,11 @@ def update_user_role(
     target = db.query(User).filter_by(id=user_id).first()
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
+    if target.id == admin.id and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot revoke your own administrative privileges."
+        )
     target.is_admin = is_admin
     db.commit()
     return {"message": f"User {target.email} is_admin updated to {is_admin}"}

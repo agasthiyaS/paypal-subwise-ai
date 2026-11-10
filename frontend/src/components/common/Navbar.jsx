@@ -70,7 +70,7 @@ const Navbar = () => {
   return (
     <>
       <header className="top-navbar">
-        <Link to="/" className="nav-brand-group">
+        <Link to={user ? "/dashboard" : "/"} className="nav-brand-group">
           <div className="nav-brand-logo">P</div>
           <div>
             <div className="nav-brand-title">

@@ -259,19 +259,11 @@ class VendorComparisonService:
         sub_tokens = [s.lower().strip() for s in subscription_names]
         matched: List[VendorComparisonItem] = []
 
-        # Find direct matches
+        # Find direct matches against actual verified user subscriptions/commitments
         for item in VERIFIED_MARKET_ALTERNATIVES:
             svc_name = item.current_service_name.lower()
             if any(svc_name in token or token in svc_name for token in sub_tokens):
                 matched.append(item)
-
-        # If user has few confirmed subs, include top 3 general recommendations
-        if len(matched) < 3:
-            for item in VERIFIED_MARKET_ALTERNATIVES:
-                if item not in matched:
-                    matched.append(item)
-                if len(matched) >= 4:
-                    break
 
         total_m = sum(item.recommended_alternative.estimated_monthly_savings for item in matched)
         total_a = sum(item.recommended_alternative.estimated_annual_savings for item in matched)

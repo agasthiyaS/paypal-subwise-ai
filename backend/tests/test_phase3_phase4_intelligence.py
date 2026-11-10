@@ -384,6 +384,12 @@ def test_vendor_comparison_service():
     assert any("Netflix" in s for s in matched_services)
     assert any("Spotify" in s for s in matched_services)
 
+    # Check that empty subscriptions produce zero savings (no fabricated values)
+    empty_ops = VendorComparisonService.match_user_opportunities([])
+    assert empty_ops.total_identified_monthly_savings == 0.0
+    assert empty_ops.total_identified_annual_savings == 0.0
+    assert len(empty_ops.ranked_opportunities) == 0
+
 
 def test_consumer_recommendation_engine(db):
     biz = db.query(BusinessProfile).filter_by(id=201).first()

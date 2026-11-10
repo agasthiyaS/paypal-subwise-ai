@@ -6,6 +6,7 @@ from app.database import get_db
 from app.models.user import User
 from app.models.business import BusinessProfile
 from app.models.subscription import Subscription
+from app.models.expense import Expense
 from app.schemas.vendor_comparison import (
     VendorComparisonItem,
     SavingsDiscoverySummary
@@ -33,7 +34,16 @@ def get_personalized_savings_opportunities(
     subs = get_environment_subscriptions(db=db, biz=biz, request=request)
     sub_names = [s.vendor_name for s in subs if s.vendor_name]
 
-    return VendorComparisonService.match_user_opportunities(subscription_names=sub_names)
+    # Include recurring personal and household expenses
+    rec_expenses = (
+        db.query(Expense)
+        .filter(Expense.business_id == biz.id, Expense.is_recurring == True)
+        .all()
+    )
+    expense_merchants = [e.merchant or e.description for e in rec_expenses if (e.merchant or e.description)]
+    all_names = list(set(sub_names + expense_merchants))
+
+    return VendorComparisonService.match_user_opportunities(subscription_names=all_names)
 
 @router.get("/catalog", response_model=List[VendorComparisonItem])
 def get_vendor_comparison_catalog():
