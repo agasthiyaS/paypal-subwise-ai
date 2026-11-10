@@ -60,36 +60,16 @@ const IndividualDashboardView = ({
   subAnalysis,
   monthlyChartData,
   categoryPieData,
+  expenseSummary,
+  unifiedIntelligence,
 }) => {
   // Computed Personal Metrics
   const netSavings = Math.max(0, monthlyIncome - monthlyExpenses);
   const savingsRate = monthlyIncome > 0 ? Math.round((netSavings / monthlyIncome) * 100) : 0;
   const discretionarySpend = Math.max(0, monthlyExpenses - totalSubSpend);
 
-  // Individual Recommendations (filtered or enhanced)
-  const personalRecs = recommendations.length > 0 ? recommendations : [
-    {
-      id: 'ind-1',
-      title: 'Review Cloud Storage & App Subscriptions',
-      impact: 'Save $24/mo',
-      urgency: 'Medium',
-      description: 'Audit recurring services with zero activity in the last 45 days.',
-    },
-    {
-      id: 'ind-2',
-      title: 'Food Delivery & Convenience Surcharge Alert',
-      impact: 'Save $85/mo',
-      urgency: 'High',
-      description: 'Frequent $4–$9 delivery fees detected across weekend orders.',
-    },
-    {
-      id: 'ind-3',
-      title: 'Switch to Annual Billing for Core Services',
-      impact: 'Save 15%',
-      urgency: 'Low',
-      description: 'Spotify and media providers offer discounts on prepaid annual plans.',
-    }
-  ];
+  // Individual Recommendations strictly from backend
+  const personalRecs = Array.isArray(recommendations) ? recommendations : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -314,22 +294,52 @@ const IndividualDashboardView = ({
         </div>
 
         {/* Potential Savings Opportunity */}
-        <div className="fintech-card" style={{ padding: '1.75rem', border: '1.5px solid var(--amber-border)', background: 'var(--amber-bg)' }}>
+        <div className="fintech-card" style={{
+          padding: '1.75rem',
+          border: potentialSavings > 0 ? '1.5px solid var(--amber-border)' : '1.5px solid var(--border-light)',
+          background: potentialSavings > 0 ? 'var(--amber-bg)' : 'var(--bg-surface)'
+        }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--amber-dark)', marginBottom: '0.4rem' }}>
+              <div style={{
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                color: potentialSavings > 0 ? 'var(--amber-dark)' : 'var(--text-muted)',
+                marginBottom: '0.4rem'
+              }}>
                 Identified Savings Potential
               </div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--amber-dark)', lineHeight: 1.1 }}>
-                ${potentialSavings > 0 ? potentialSavings.toFixed(2) : '124.50'}
+              <div style={{
+                fontSize: '2.5rem',
+                fontWeight: 800,
+                color: potentialSavings > 0 ? 'var(--amber-dark)' : 'var(--navy-slate)',
+                lineHeight: 1.1
+              }}>
+                ${potentialSavings > 0 ? potentialSavings.toFixed(2) : '0.00'}
                 <span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: '0.25rem' }}>/mo</span>
               </div>
-              <p style={{ fontSize: '0.85rem', color: 'var(--amber-dark)', marginTop: '0.5rem' }}>
-                Up to ${potentialAnnualSavings > 0 ? potentialAnnualSavings.toFixed(0) : '1,494'} projected annual recapture through subscription &amp; fee trimming.
+              <p style={{
+                fontSize: '0.85rem',
+                color: potentialSavings > 0 ? 'var(--amber-dark)' : 'var(--text-muted)',
+                marginTop: '0.5rem'
+              }}>
+                {potentialSavings > 0
+                  ? `Up to $${potentialAnnualSavings.toFixed(0)} projected annual recapture through subscription & fee trimming.`
+                  : 'No recurring fee leaks or redundant subscriptions currently identified.'}
               </p>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'var(--amber-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Sparkles size={24} color="var(--amber-dark)" />
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '50%',
+              background: potentialSavings > 0 ? 'var(--amber-border)' : 'var(--bg-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Sparkles size={24} color={potentialSavings > 0 ? 'var(--amber-dark)' : 'var(--text-muted)'} />
             </div>
           </div>
         </div>
@@ -343,7 +353,7 @@ const IndividualDashboardView = ({
               Tailored Personal Savings Directives
             </h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-              AI suggestions derived from recurring patterns and checkout descriptors
+              AI suggestions derived from verified recurring records and expense commitments
             </p>
           </div>
           <Link to="/recommendations" style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--navy-primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
@@ -351,26 +361,39 @@ const IndividualDashboardView = ({
           </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-          {personalRecs.slice(0, 3).map((r, idx) => (
-            <div key={r.id || idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: '#ecfdf5', color: '#059669' }}>
-                    {r.impact || 'Save $20/mo'}
-                  </span>
-                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Priority: {r.urgency || 'Normal'}</span>
+        {personalRecs.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {personalRecs.slice(0, 3).map((r, idx) => (
+              <div key={r.id || idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: '#ecfdf5', color: '#059669' }}>
+                      {r.monthly_savings ? `Save $${Number(r.monthly_savings).toFixed(0)}/mo` : (r.impact || 'Optimization')}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Priority: {r.priority || r.urgency || 'Normal'}</span>
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
+                    {r.title}
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
+                    {r.explanation || r.description || r.recommended_action || (r.action_items && r.action_items[0]) || 'Review and optimize this recurring commitment.'}
+                  </p>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
-                  {r.title}
-                </div>
-                <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
-                  {r.description || r.action_items?.[0] || 'Optimizing this recurring commitment helps build your safety buffer.'}
-                </p>
               </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '2.5rem 1.5rem', background: '#f8fafc', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+            <Sparkles size={28} color="#94a3b8" style={{ marginBottom: '0.5rem' }} />
+            <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#334155', marginBottom: '0.25rem' }}>No Active Savings Directives</div>
+            <div style={{ fontSize: '0.85rem', color: '#64748b', maxWidth: '420px', margin: '0 auto 1.25rem' }}>
+              Add your expenses or sync transactions to detect subscription overlaps, price creeping, or optimization opportunities.
             </div>
-          ))}
-        </div>
+            <Link to="/expenses" className="btn-fintech btn-fintech-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 1rem' }}>
+              <DollarSign size={14} /> Record Expenses
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Charts Row */}

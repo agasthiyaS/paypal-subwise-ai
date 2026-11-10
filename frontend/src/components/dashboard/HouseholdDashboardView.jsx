@@ -58,13 +58,23 @@ const HouseholdDashboardView = ({
   subAnalysis,
   monthlyChartData,
   categoryPieData,
+  expenseSummary,
+  unifiedIntelligence,
 }) => {
-  // Household-specific metric derivations
-  const estimatedGroceries = Math.round(monthlyExpenses * 0.38 * 100) / 100;
-  const estimatedUtilities = Math.round(monthlyExpenses * 0.22 * 100) / 100;
-  const householdBudget = business?.monthly_baseline_revenue || 3500;
-  const budgetVariance = householdBudget - monthlyExpenses;
-  const isUnderBudget = budgetVariance >= 0;
+  // Household-specific metric derivations from actual records
+  const actualGroceries = expenseSummary?.grocery_total ?? 0;
+  const actualUtilities = expenseSummary?.utility_total ?? 0;
+  const householdBudget = (expenseSummary && expenseSummary.overall_budget > 0)
+    ? expenseSummary.overall_budget
+    : (business?.monthly_baseline_revenue || 0);
+  const hasBudget = householdBudget > 0;
+  const budgetVariance = hasBudget ? householdBudget - monthlyExpenses : 0;
+  const isUnderBudget = hasBudget ? budgetVariance >= 0 : true;
+
+  // Grounded recommendations
+  const householdRecs = Array.isArray(recommendations) && recommendations.length > 0
+    ? recommendations.slice(0, 3)
+    : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -243,21 +253,25 @@ const HouseholdDashboardView = ({
         <StatCard
           title="Monthly Shared Outflow"
           value={`$${monthlyExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={isUnderBudget ? `$${budgetVariance.toFixed(0)} under monthly budget` : `$${Math.abs(budgetVariance).toFixed(0)} over budget`}
+          subtext={
+            hasBudget
+              ? (isUnderBudget ? `$${budgetVariance.toFixed(0)} under monthly budget` : `$${Math.abs(budgetVariance).toFixed(0)} over budget`)
+              : "No monthly budget set"
+          }
           icon={TrendingDown}
-          isPositiveGood={isUnderBudget}
+          isPositiveGood={hasBudget ? isUnderBudget : true}
         />
         <StatCard
           title="Groceries &amp; Staples"
-          value={`$${estimatedGroceries.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext="Supermarkets, wholesale clubs &amp; pantries"
+          value={actualGroceries > 0 ? `$${actualGroceries.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"}
+          subtext={actualGroceries > 0 ? "Supermarkets, food &amp; pantry records" : "No grocery expenses recorded this month"}
           icon={ShoppingCart}
           isPositiveGood={false}
         />
         <StatCard
           title="Utilities &amp; Telecom"
-          value={`$${estimatedUtilities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext="Electricity, water, gas &amp; broadband"
+          value={actualUtilities > 0 ? `$${actualUtilities.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "$0.00"}
+          subtext={actualUtilities > 0 ? "Electricity, water, gas &amp; internet" : "No utility expenses recorded this month"}
           icon={Zap}
           isPositiveGood={false}
         />
@@ -266,39 +280,43 @@ const HouseholdDashboardView = ({
       {/* Household Budget & Smart Benchmarks Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
         {/* Budget Status Card */}
-        <div className="fintech-card" style={{ padding: '1.75rem', border: `1.5px solid ${isUnderBudget ? '#a7f3d0' : '#fca5a5'}`, background: isUnderBudget ? '#f0fdf4' : '#fff1f2' }}>
+        <div className="fintech-card" style={{ padding: '1.75rem', border: `1.5px solid ${!hasBudget ? '#e2e8f0' : isUnderBudget ? '#a7f3d0' : '#fca5a5'}`, background: !hasBudget ? '#f8fafc' : isUnderBudget ? '#f0fdf4' : '#fff1f2' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: isUnderBudget ? '#15803d' : '#b91c1c', marginBottom: '0.4rem' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: !hasBudget ? '#64748b' : isUnderBudget ? '#15803d' : '#b91c1c', marginBottom: '0.4rem' }}>
                 Household Budget Status
               </div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: isUnderBudget ? '#15803d' : '#b91c1c', lineHeight: 1.1 }}>
-                {isUnderBudget ? 'On Target' : 'Over Budget'}
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: !hasBudget ? '#334155' : isUnderBudget ? '#15803d' : '#b91c1c', lineHeight: 1.1 }}>
+                {!hasBudget ? 'No Budget Set' : isUnderBudget ? 'On Target' : 'Over Budget'}
               </div>
-              <p style={{ fontSize: '0.85rem', color: isUnderBudget ? '#166534' : '#991b1b', marginTop: '0.5rem', lineHeight: 1.45 }}>
-                {isUnderBudget
-                  ? `You have a $${budgetVariance.toFixed(2)} safety cushion remaining for this month's shared pool.`
-                  : `Shared outflows exceed your target budget by $${Math.abs(budgetVariance).toFixed(2)}. Consider trimming non-essential subscriptions.`}
+              <p style={{ fontSize: '0.85rem', color: !hasBudget ? '#64748b' : isUnderBudget ? '#166534' : '#991b1b', marginTop: '0.5rem', lineHeight: 1.45 }}>
+                {!hasBudget
+                  ? 'Set a monthly household budget to track spending limits and remaining cushion across shared expenses.'
+                  : isUnderBudget
+                    ? `You have a $${budgetVariance.toFixed(2)} safety cushion remaining for this month's shared pool.`
+                    : `Shared outflows exceed your target budget by $${Math.abs(budgetVariance).toFixed(2)}. Consider trimming non-essential subscriptions.`}
               </p>
             </div>
-            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: isUnderBudget ? '#bbf7d0' : '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Home size={24} color={isUnderBudget ? '#15803d' : '#b91c1c'} />
+            <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: !hasBudget ? '#e2e8f0' : isUnderBudget ? '#bbf7d0' : '#fecaca', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Home size={24} color={!hasBudget ? '#64748b' : isUnderBudget ? '#15803d' : '#b91c1c'} />
             </div>
           </div>
         </div>
 
-        {/* Grocery & Vendor Benchmarking Insight */}
+        {/* Household Savings Intelligence Card */}
         <div className="fintech-card" style={{ padding: '1.75rem', border: '1.5px solid #bfdbfe', background: '#eff6ff' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
               <div style={{ fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#0070ba', marginBottom: '0.4rem' }}>
-                Supermarket Price Benchmark
+                Household Savings Intelligence
               </div>
               <div style={{ fontSize: '2.25rem', fontWeight: 800, color: '#003087', lineHeight: 1.1 }}>
-                Save ~$140/mo
+                {potentialSavings > 0 ? `Save $${potentialSavings.toFixed(2)}/mo` : '$0.00/mo'}
               </div>
               <p style={{ fontSize: '0.85rem', color: '#1e3a8a', marginTop: '0.5rem', lineHeight: 1.45 }}>
-                Comparing recent grocery items: Purchasing paper goods &amp; pantry staples at wholesale clubs saves an average 16% over local grocery retailers.
+                {potentialSavings > 0
+                  ? `Identified optimizations across shared subscriptions and recurring household services.`
+                  : `No recurring household overhead redundancies detected. SubWise AI monitors shared expenses continuously.`}
               </p>
             </div>
             <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -324,52 +342,39 @@ const HouseholdDashboardView = ({
           </Link>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: '#ecfdf5', color: '#059669' }}>
-                Save $16/mo
-              </span>
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Streaming</span>
-            </div>
-            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
-              Consolidate to Family Streaming Plan
-            </div>
-            <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
-              Multiple individual media subscriptions found. Switching to one family plan covers up to 6 members.
-            </p>
+        {householdRecs.length > 0 ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
+            {householdRecs.map((rec, idx) => (
+              <div key={rec.id || idx} style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: rec.potential_monthly_savings > 0 ? '#ecfdf5' : '#f1f5f9', color: rec.potential_monthly_savings > 0 ? '#059669' : '#475569' }}>
+                    {rec.potential_monthly_savings > 0 ? `Save $${rec.potential_monthly_savings.toFixed(2)}/mo` : (rec.action_type || 'Optimization')}
+                  </span>
+                  <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>{rec.category || rec.service_name || 'Household'}</span>
+                </div>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
+                  {rec.title || rec.service_name || 'Savings Opportunity'}
+                </div>
+                <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
+                  {rec.description || rec.reasoning || 'Actionable intelligence to reduce shared spending.'}
+                </p>
+              </div>
+            ))}
           </div>
-
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: '#fef3c7', color: '#d97706' }}>
-                Inspect Anomaly
-              </span>
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Utilities</span>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '2.5rem 1.5rem', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+            <CheckCircle2 size={36} color="#10b981" style={{ margin: '0 auto 0.75rem auto' }} />
+            <div style={{ fontWeight: 700, fontSize: '1rem', color: '#1e293b', marginBottom: '0.35rem' }}>
+              No Active Household Directives
             </div>
-            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
-              Electricity Peak Surge Check
-            </div>
-            <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
-              Recent power payments reflect a 22% increase over prior month. Check smart thermostat schedules.
+            <p style={{ color: '#64748b', fontSize: '0.85rem', maxWidth: '440px', margin: '0 auto 1rem auto', lineHeight: 1.5 }}>
+              All household spending and shared subscriptions are optimized. As household members log shared expenses, SubWise AI will identify consolidation opportunities.
             </p>
+            <Link to="/expenses" className="btn-fintech btn-fintech-outline btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem' }}>
+              Log New Expense <ArrowRight size={14} />
+            </Link>
           </div>
-
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '1.15rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: '#ecfdf5', color: '#059669' }}>
-                Save $25/mo
-              </span>
-              <span style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>Telecom</span>
-            </div>
-            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0f172a', marginBottom: '0.35rem' }}>
-              Broadband Speed vs Pricing Check
-            </div>
-            <p style={{ fontSize: '0.82rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>
-              Your current fiber plan rate increased past promotional period. Renegotiate or apply retention credits.
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Charts Row */}

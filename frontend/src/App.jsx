@@ -125,6 +125,7 @@ function App() {
       <Route element={<ProtectedLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/expenses" element={<ExpensesPage />} />
+        <Route path="/budgets" element={<ExpensesPage defaultTab="budget" />} />
         <Route path="/household" element={<HouseholdPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/savings-discovery" element={<SavingsDiscoveryPage />} />
@@ -134,6 +135,8 @@ function App() {
         <Route path="/recommendations" element={<RecommendationsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/transactions" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
       </Route>
 
       {/* Fallback */}

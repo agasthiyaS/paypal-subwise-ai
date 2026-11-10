@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { transactionsAPI, subscriptionsAPI, recommendationsAPI, paypalAPI, demoAPI } from '../services/api';
+import { transactionsAPI, subscriptionsAPI, recommendationsAPI, paypalAPI, demoAPI, expensesAPI, intelligenceAPI } from '../services/api';
 import { classifyFinancialTransactions, isValidOperatingTransaction, isCurrencyConversionLeg } from '../utils/financialClassification';
 import PayPalConnectModal from '../components/settings/PayPalConnectModal';
 import SandboxPaymentModal from '../components/settings/SandboxPaymentModal';
@@ -52,6 +52,8 @@ const DashboardPage = () => {
   const [subAnalysis, setSubAnalysis] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [paypalStatus, setPaypalStatus] = useState(null);
+  const [expenseSummary, setExpenseSummary] = useState(null);
+  const [unifiedIntelligence, setUnifiedIntelligence] = useState(null);
 
   const isDemo = Boolean(business?.is_demo || isDemoMode);
   const paypalMode = isDemo ? 'demo' : ((business?.paypal_mode === 'live') ? 'live' : 'sandbox');
@@ -61,19 +63,28 @@ const DashboardPage = () => {
   const loadData = async () => {
     try {
       setLoadingData(true);
-      const [txRes, subRes, recRes, statusRes, analysisRes] = await Promise.allSettled([
+      const calls = [
         transactionsAPI.getTransactions({ limit: 500 }),
         subscriptionsAPI.getSubscriptions(),
         recommendationsAPI.getRecommendations(),
         paypalAPI.getStatus(),
         subscriptionsAPI.getAnalysis(),
-      ]);
+      ];
+      const isConsumer = business?.account_type === 'individual' || business?.account_type === 'household';
+      if (isConsumer) {
+        calls.push(expensesAPI.getSummary());
+        calls.push(intelligenceAPI.getUnified());
+      }
+      const results = await Promise.allSettled(calls);
+      const [txRes, subRes, recRes, statusRes, analysisRes, expSumRes, intelRes] = results;
 
-      if (txRes.status === 'fulfilled') setTransactions(txRes.value || []);
-      if (subRes.status === 'fulfilled') setSubscriptionSummary(subRes.value);
-      if (recRes.status === 'fulfilled') setRecommendations(recRes.value || []);
-      if (statusRes.status === 'fulfilled') setPaypalStatus(statusRes.value);
-      if (analysisRes.status === 'fulfilled') setSubAnalysis(analysisRes.value);
+      if (txRes?.status === 'fulfilled') setTransactions(txRes.value || []);
+      if (subRes?.status === 'fulfilled') setSubscriptionSummary(subRes.value);
+      if (recRes?.status === 'fulfilled') setRecommendations(recRes.value || []);
+      if (statusRes?.status === 'fulfilled') setPaypalStatus(statusRes.value);
+      if (analysisRes?.status === 'fulfilled') setSubAnalysis(analysisRes.value);
+      if (expSumRes?.status === 'fulfilled') setExpenseSummary(expSumRes.value);
+      if (intelRes?.status === 'fulfilled') setUnifiedIntelligence(intelRes.value);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
@@ -382,6 +393,53 @@ const DashboardPage = () => {
 
   const accountType = business?.account_type || 'business';
 
+  // Grounded category breakdown for personal & household from real expense ledger
+  const effectiveCategoryPieData = useMemo(() => {
+    if (expenseSummary?.category_breakdown && expenseSummary.category_breakdown.length > 0) {
+      const colors = ['#0070ba', '#003087', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6366f1', '#06b6d4', '#ef4444', '#64748b'];
+      return expenseSummary.category_breakdown.map((item, idx) => ({
+        name: item.category,
+        value: item.amount,
+        color: colors[idx % colors.length]
+      }));
+    }
+    return categoryPieData;
+  }, [expenseSummary, categoryPieData]);
+
+  // Grounded trend data for personal & household from real expense ledger
+  const effectiveMonthlyChartData = useMemo(() => {
+    if (expenseSummary?.recent_trend && expenseSummary.recent_trend.length > 0) {
+      return expenseSummary.recent_trend.map(t => ({
+        month: t.month,
+        income: t.income,
+        expenses: t.expenses,
+        subscriptions: totalSubSpend,
+        balance: verifiedCashBalance || 0
+      }));
+    }
+    return monthlyChartData;
+  }, [expenseSummary, monthlyChartData, totalSubSpend, verifiedCashBalance]);
+
+  const effectiveMonthlyIncome = (expenseSummary?.total_income && expenseSummary.total_income > 0)
+    ? expenseSummary.total_income
+    : monthlyIncome;
+
+  const effectiveMonthlyExpenses = (expenseSummary?.total_expenses && expenseSummary.total_expenses > 0)
+    ? expenseSummary.total_expenses
+    : monthlyExpenses;
+
+  const effectiveRecommendations = (unifiedIntelligence?.recommendations && unifiedIntelligence.recommendations.length > 0)
+    ? unifiedIntelligence.recommendations
+    : recommendations;
+
+  const effectivePotentialSavings = unifiedIntelligence?.total_potential_monthly_savings !== undefined
+    ? unifiedIntelligence.total_potential_monthly_savings
+    : potentialSavings;
+
+  const effectivePotentialAnnualSavings = unifiedIntelligence?.total_potential_annual_savings !== undefined
+    ? unifiedIntelligence.total_potential_annual_savings
+    : potentialAnnualSavings;
+
   const viewProps = {
     business,
     transactions,
@@ -401,22 +459,24 @@ const DashboardPage = () => {
     formatLastSync,
     displayCompanyName,
     operatingCount,
-    monthlyIncome,
-    monthlyExpenses,
+    monthlyIncome: effectiveMonthlyIncome,
+    monthlyExpenses: effectiveMonthlyExpenses,
     fundingInflows,
     totalSubSpend,
     activeSubsCount,
     verifiedCashBalance,
     runwayStatus,
     healthData,
-    potentialSavings,
-    potentialAnnualSavings,
-    recommendations,
+    potentialSavings: effectivePotentialSavings,
+    potentialAnnualSavings: effectivePotentialAnnualSavings,
+    recommendations: effectiveRecommendations,
     upcomingPayments,
     upcomingTotal,
     subAnalysis,
-    monthlyChartData,
-    categoryPieData,
+    monthlyChartData: effectiveMonthlyChartData,
+    categoryPieData: effectiveCategoryPieData,
+    expenseSummary,
+    unifiedIntelligence,
   };
 
   if (accountType === 'individual') {

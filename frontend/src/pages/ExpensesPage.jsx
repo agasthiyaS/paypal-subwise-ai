@@ -59,7 +59,7 @@ const EMPTY_FORM = {
   notes: '',
 };
 
-export default function ExpensesPage() {
+export default function ExpensesPage({ defaultTab = 'expenses' }) {
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(null);
   const [budgets, setBudgets] = useState([]);
@@ -73,7 +73,7 @@ export default function ExpensesPage() {
   const [filterType, setFilterType] = useState('All');
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState(null);
-  const [activeTab, setActiveTab] = useState('expenses'); // 'expenses' | 'budget'
+  const [activeTab, setActiveTab] = useState(defaultTab); // 'expenses' | 'budget'
   const [budgetForm, setBudgetForm] = useState({ category: 'Other', amount: '', period_month: new Date().getMonth() + 1, period_year: new Date().getFullYear() });
   const [savingBudget, setSavingBudget] = useState(false);
 
