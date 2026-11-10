@@ -11,6 +11,7 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
+    is_admin = Column(Boolean, default=False, nullable=False, server_default="false")
     
     # Stage 8.5: Tracks selected active profile (Sandbox ID vs Demo ID)
     active_business_id = Column(Integer, nullable=True)

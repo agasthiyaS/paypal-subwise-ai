@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import Base, engine
-from app.api import auth, business, transactions, subscriptions, simulation, recommendations, paypal, forecast, financial_intelligence, reports, assistant, demo, expenses, household, budgets, savings_discovery
+from app.api import auth, business, transactions, subscriptions, simulation, recommendations, paypal, forecast, financial_intelligence, reports, assistant, demo, expenses, household, budgets, savings_discovery, admin, vendors, entitlements
 
 # Create DB tables
 Base.metadata.create_all(bind=engine)
@@ -43,6 +43,9 @@ app.include_router(expenses.router, prefix=settings.API_V1_STR)
 app.include_router(household.router, prefix=settings.API_V1_STR)
 app.include_router(budgets.router, prefix=settings.API_V1_STR)
 app.include_router(savings_discovery.router, prefix=settings.API_V1_STR)
+app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(vendors.router, prefix=settings.API_V1_STR)
+app.include_router(entitlements.router, prefix=settings.API_V1_STR)
 
 # Health Check Endpoint
 @app.get(f"{settings.API_V1_STR}/health")

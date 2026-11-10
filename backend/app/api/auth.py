@@ -61,7 +61,8 @@ def register(payload: UserRegister, db: Session = Depends(get_db)):
         "business_id": biz.id,
         "email": user.email,
         "company_name": biz.company_name,
-        "account_type": biz.account_type or "business"
+        "account_type": biz.account_type or "business",
+        "is_admin": bool(getattr(user, "is_admin", False))
     }
 
 @router.post("/login", response_model=Token)
@@ -100,6 +101,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "email": user.email,
         "company_name": biz_name,
         "account_type": biz_acct_type,
+        "is_admin": bool(getattr(user, "is_admin", False)),
         "paypal_mode": biz_mode,
         "paypal_connected": biz_connected
     }
@@ -119,6 +121,7 @@ def get_current_user_profile(
             "id": current_user.id,
             "email": current_user.email,
             "full_name": current_user.full_name,
+            "is_admin": bool(getattr(current_user, "is_admin", False)),
             "created_at": current_user.created_at
         },
         "business": biz

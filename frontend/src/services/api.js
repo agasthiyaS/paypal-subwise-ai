@@ -367,4 +367,62 @@ export const savingsAPI = {
   },
 };
 
+// ─── Phase 6: Admin, Vendors & Entitlements ──────────────────────────────────
+export const adminAPI = {
+  getStats: async () => {
+    const res = await apiClient.get('/admin/stats');
+    return res.data;
+  },
+  getUsers: async (limit = 50) => {
+    const res = await apiClient.get('/admin/users', { params: { limit } });
+    return res.data;
+  },
+  updateUserRole: async (userId, isAdmin) => {
+    const res = await apiClient.put(`/admin/users/${userId}/role`, null, { params: { is_admin: isAdmin } });
+    return res.data;
+  },
+};
+
+export const vendorsAPI = {
+  getVendors: async (params = {}) => {
+    const res = await apiClient.get('/vendors', { params });
+    return res.data;
+  },
+  getCategories: async () => {
+    const res = await apiClient.get('/vendors/categories');
+    return res.data;
+  },
+  getVendor: async (id) => {
+    const res = await apiClient.get(`/vendors/${id}`);
+    return res.data;
+  },
+  createVendor: async (data) => {
+    const res = await apiClient.post('/vendors', data);
+    return res.data;
+  },
+  updateVendor: async (id, data) => {
+    const res = await apiClient.put(`/vendors/${id}`, data);
+    return res.data;
+  },
+  deleteVendor: async (id) => {
+    const res = await apiClient.delete(`/vendors/${id}`);
+    return res.data;
+  },
+  addPlan: async (vendorId, planData) => {
+    const res = await apiClient.post(`/vendors/${vendorId}/plans`, planData);
+    return res.data;
+  },
+  deletePlan: async (vendorId, planId) => {
+    const res = await apiClient.delete(`/vendors/${vendorId}/plans/${planId}`);
+    return res.data;
+  },
+};
+
+export const entitlementsAPI = {
+  getEntitlements: async () => {
+    const res = await apiClient.get('/entitlements');
+    return res.data;
+  },
+};
+
 export default apiClient;

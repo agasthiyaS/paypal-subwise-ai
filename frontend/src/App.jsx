@@ -24,6 +24,7 @@ import ExpensesPage from './pages/ExpensesPage';
 import HouseholdPage from './pages/HouseholdPage';
 import SavingsDiscoveryPage from './pages/SavingsDiscoveryPage';
 import InsightsPage from './pages/InsightsPage';
+import AdminPage from './pages/AdminPage';
 
 /* ============================================================ */
 /*  Loading Screen                                              */
@@ -135,6 +136,7 @@ function App() {
         <Route path="/recommendations" element={<RecommendationsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="/transactions" element={<Navigate to="/dashboard" replace />} />
         <Route path="/settings" element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -8,6 +8,7 @@ from app.models.household_member import HouseholdMember
 from app.models.expense import Expense
 from app.models.budget import Budget
 from app.models.webhook_event import WebhookEvent
+from app.models.vendor import Vendor, VendorPlan
 
 __all__ = [
     "User",
@@ -20,5 +21,7 @@ __all__ = [
     "Expense",
     "Budget",
     "WebhookEvent",
+    "Vendor",
+    "VendorPlan",
 ]
 

@@ -67,3 +67,12 @@ def get_optional_current_user(token: Optional[str] = Depends(oauth2_scheme_optio
     except Exception:
         return None
     return None
+
+def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if not getattr(current_user, "is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required."
+        )
+    return current_user
+

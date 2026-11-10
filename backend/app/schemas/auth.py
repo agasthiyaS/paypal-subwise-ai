@@ -24,6 +24,7 @@ class Token(BaseModel):
     email: str
     company_name: str
     account_type: Optional[str] = "business"
+    is_admin: Optional[bool] = False
     paypal_mode: Optional[str] = "sandbox"
     paypal_connected: Optional[bool] = True
 
@@ -36,6 +37,7 @@ class UserResponse(BaseModel):
     email: str
     full_name: Optional[str]
     is_active: bool
+    is_admin: bool = False
     created_at: datetime.datetime
 
     class Config:

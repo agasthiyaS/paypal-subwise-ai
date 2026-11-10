@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 const Sidebar = () => {
-  const { business } = useAuth();
+  const { user, business } = useAuth();
   const accountType = business?.account_type || 'business';
 
   let menuItems = [];
@@ -75,6 +75,18 @@ const Sidebar = () => {
       { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
       { to: '/assistant', label: 'AI Assistant', icon: MessageSquare, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
     ];
+  }
+
+  if (user?.is_admin) {
+    menuItems.push({
+      to: '/admin',
+      label: 'Admin Portal',
+      icon: ShieldCheck,
+      badge: 'Admin',
+      badgeColor: '#ef4444',
+      badgeBg: '#fef2f2',
+      badgeBorder: '#fecaca',
+    });
   }
 
   return (
