@@ -25,6 +25,7 @@ from app.services.smart_spending_service import SmartSpendingService
 from app.services.financial_health_service import FinancialHealthService
 from app.services.multi_scenario_forecast_service import MultiScenarioForecastService
 from app.services.consumer_recommendation_engine import ConsumerRecommendationEngine
+from app.services.reconciliation_service import ReconciliationService, FinancialReconciliationReport
 from app.services.business_service import (
     get_active_business,
     get_environment_subscriptions,
@@ -125,3 +126,18 @@ def get_multi_scenario_forecast(
     biz = get_active_business(current_user=current_user, db=db, request=request)
     spending = SmartSpendingService.analyze_spending(business=biz, db=db)
     return MultiScenarioForecastService.generate_forecast(business=biz, analysis=spending, days=days)
+
+
+@router.get("/reconciliation", response_model=FinancialReconciliationReport)
+def get_financial_reconciliation(
+    request: Request = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Performs real-time financial reconciliation between PayPal transactions,
+    expense ledger, active subscriptions, and cash-flow totals.
+    """
+    biz = get_active_business(current_user=current_user, db=db, request=request)
+    return ReconciliationService.reconcile(business=biz, db=db)
+

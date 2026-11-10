@@ -107,11 +107,11 @@ class FinancialHealthService:
             # Explicit insufficient data state - no arbitrary fallback numbers
             b_pts = 0
             b_impact = "neutral"
-            b_desc = "No budget configured (Insufficient Data): Set a monthly budget to calculate adherence."
+            b_desc = "No budget configured (Insufficient Data): Set a monthly budget to calculate adherence. Excluded from composite score calculation."
             risk_factors.append("No spending ceiling configured: Outflows are untracked against spending targets.")
             actionable_improvements.append("Configure a monthly spending budget in the Budget Manager to enable budget adherence scoring.")
             has_sufficient_data = False
-            missing_data_reasons.append("No configured budget or monthly baseline revenue limit found.")
+            missing_data_reasons.append("No configured budget or monthly baseline revenue limit found. Score normalized against available data.")
         elif spent == 0:
             b_pts = 25
             b_impact = "positive"
@@ -238,7 +238,16 @@ class FinancialHealthService:
         ))
 
         # Total Score
-        total_score = sum(f.score for f in factors)
+        # If budget factor has insufficient data, recalculate against available points
+        # so users are not penalized for unconfigured budgets
+        active_factors = [f for f in factors if not (f.factor_name == "Budget Adherence" and budget_limit is None)]
+        active_max = sum(f.max_score for f in active_factors)
+        active_score = sum(f.score for f in active_factors)
+
+        if active_max > 0 and budget_limit is None:
+            total_score = min(100, max(0, round((active_score / active_max) * 100)))
+        else:
+            total_score = min(100, max(0, sum(f.score for f in factors)))
 
         if total_score >= 80:
             rating = "Excellent"

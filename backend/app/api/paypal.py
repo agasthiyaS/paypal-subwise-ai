@@ -1,7 +1,7 @@
 import datetime
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Request
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
@@ -10,6 +10,7 @@ from app.models.business import BusinessProfile
 from app.models.transaction import Transaction
 from app.models.subscription import Subscription
 from app.models.recommendation import Recommendation
+from app.models.webhook_event import WebhookEvent
 from app.schemas.transaction import (
     PayPalSyncRequest,
     PayPalSyncResponse,
@@ -36,6 +37,7 @@ from app.services.business_service import (
     get_environment_transactions,
     get_environment_subscriptions,
 )
+from app.services.paypal_webhook_service import PayPalWebhookService
 
 logger = logging.getLogger("subwise_ai.api.paypal")
 
@@ -596,4 +598,62 @@ def capture_test_order(
             f"Synchronized with PostgreSQL ledger and Transaction Search."
         )
     )
+
+
+@router.post("/webhooks")
+async def handle_paypal_webhook(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Receives, cryptographically verifies, and idempotently handles PayPal Webhook events.
+    Synchronizes transaction and subscription lifecycles into SubWise AI ledger.
+    """
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON payload")
+
+    headers = dict(request.headers)
+    result = PayPalWebhookService.process_webhook_event(
+        event_payload=payload,
+        headers=headers,
+        db=db
+    )
+    if result.get("status") == "rejected":
+        raise HTTPException(status_code=400, detail=result.get("message", "Webhook rejected"))
+
+    return result
+
+
+@router.get("/webhooks")
+def list_webhook_events(
+    limit: int = 50,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns recent webhook audit log records without exposing sensitive credentials.
+    """
+    events = (
+        db.query(WebhookEvent)
+        .order_by(WebhookEvent.received_at.desc())
+        .limit(min(limit, 100))
+        .all()
+    )
+    return [
+        {
+            "id": ev.id,
+            "paypal_event_id": ev.paypal_event_id,
+            "event_type": ev.event_type,
+            "resource_type": ev.resource_type,
+            "status": ev.status,
+            "verification_status": ev.verification_status,
+            "received_at": ev.received_at.isoformat() if ev.received_at else None,
+            "processed_at": ev.processed_at.isoformat() if ev.processed_at else None,
+            "error_message": ev.error_message,
+        }
+        for ev in events
+    ]
+
 

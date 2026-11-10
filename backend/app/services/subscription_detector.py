@@ -181,6 +181,11 @@ class SubscriptionDetector:
                         detection_reason = (
                             f"Confirmed {cadence} subscription with {price_change_pct:+.1f}% price creep alert over {tx_count} cycles."
                         )
+                    elif abs(price_change_pct) >= 5.0:
+                        trend_word = "increase" if price_change_pct > 0 else "decrease"
+                        detection_reason = (
+                            f"Confirmed {cadence} subscription with {price_change_pct:+.1f}% price {trend_word} detected over {tx_count} cycles."
+                        )
                     else:
                         detection_reason = (
                             f"Confirmed {cadence} subscription supported by {tx_count} recurring payments with steady cadence."

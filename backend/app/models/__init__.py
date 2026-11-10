@@ -7,6 +7,7 @@ from app.models.scenario import ScenarioSimulation
 from app.models.household_member import HouseholdMember
 from app.models.expense import Expense
 from app.models.budget import Budget
+from app.models.webhook_event import WebhookEvent
 
 __all__ = [
     "User",
@@ -18,5 +19,6 @@ __all__ = [
     "HouseholdMember",
     "Expense",
     "Budget",
+    "WebhookEvent",
 ]
 

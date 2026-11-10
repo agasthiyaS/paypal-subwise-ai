@@ -222,6 +222,43 @@ def test_financial_health_neither_budget_nor_baseline(db):
     assert any("budget" in a.lower() for a in health.actionable_improvements)
 
 
+def test_financial_health_recalculated_against_available_points(db):
+    """Verify that when budget is unconfigured, health score is normalized against available 75 pts rather than penalizing by 25 pts."""
+    biz = db.query(BusinessProfile).filter_by(id=202).first()
+    if not biz:
+        user2 = User(id=202, email="nobudget@test.com", hashed_password="pw", full_name="No Budget", is_active=True)
+        biz = BusinessProfile(
+            id=202,
+            user_id=202,
+            company_name="No Budget Profile",
+            account_type="individual",
+            monthly_baseline_revenue=None,
+            current_cash_reserves=5000.0
+        )
+        db.add(user2)
+        db.add(biz)
+        db.commit()
+
+    from app.schemas.consumer_intelligence import SpendingAnalysisResult
+    spending = SpendingAnalysisResult(
+        month=11,
+        year=2026,
+        total_income=5000.0,
+        total_expenses=2000.0,
+        net_savings=3000.0,
+        savings_rate_percent=60.0,
+        recurring_expenses_total=200.0,
+        discretionary_expenses_total=1800.0,
+        has_sufficient_data=True
+    )
+    health = FinancialHealthService.calculate_health_score(business=biz, analysis=spending, db=db)
+    # 30 (savings) + 25 (recurring) + 12 (liquidity) = 67 / 75 -> 89% Excellent
+    assert health.score == 89
+    assert health.rating == "Excellent"
+    assert health.has_sufficient_data is False
+    assert any("normalized against available" in r.lower() for r in health.missing_data_reasons)
+
+
 def test_financial_health_zero_expenses(db):
     """Verify health score gracefully handles zero expenses without arbitrary burn rate assumptions."""
     biz = db.query(BusinessProfile).filter_by(id=201).first()
