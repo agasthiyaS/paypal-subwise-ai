@@ -21,12 +21,12 @@ const CATEGORY_COLORS = [
 
 /** Mini summary card for reports page */
 const ReportMetric = ({ label, value, sub, color = 'var(--navy-slate)', bg = 'var(--bg-surface)' }) => (
-  <div className="fintech-card" style={{ padding: '1.65rem 1.85rem', background: bg }}>
-    <div style={{ fontSize: '0.88rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.55rem' }}>
+  <div className="fintech-card" style={{ padding: '1.15rem 1.35rem', background: bg }}>
+    <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>
       {label}
     </div>
-    <div style={{ fontSize: '2.1rem', fontWeight: 800, color, lineHeight: 1.15, fontFamily: 'JetBrains Mono, monospace' }}>{value}</div>
-    {sub && <div style={{ fontSize: '0.92rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>{sub}</div>}
+    <div style={{ fontSize: '1.65rem', fontWeight: 800, color, lineHeight: 1.15, fontFamily: 'JetBrains Mono, monospace' }}>{value}</div>
+    {sub && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>{sub}</div>}
   </div>
 );
 
@@ -1227,35 +1227,31 @@ const ReportsPage = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-slate)', letterSpacing: '-0.03em', marginBottom: '0.45rem', lineHeight: 1.25 }}>
-            Financial Reports & Export Intelligence
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
+            Financial Reports &amp; Export Intelligence
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
             {companyName} · {dateLabel} · {hasData ? `${transactions.length} transactions recorded` : 'No transactions synced'}
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', position: 'relative' }}>
+          <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap', position: 'relative' }}>
             {/* Sync PayPal Button */}
             <button
               onClick={() => handleSync(false)}
               disabled={syncing}
+              className="btn-fintech btn-fintech-outline btn-sm"
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.55rem',
-                padding: '0.8rem 1.2rem',
-                background: 'transparent', color: 'var(--navy-primary)',
-                border: '1.5px solid var(--navy-primary)',
-                borderRadius: 'var(--radius-md)', fontSize: '0.9rem',
-                fontWeight: 700, cursor: syncing ? 'not-allowed' : 'pointer',
-                opacity: syncing ? 0.7 : 1, minHeight: '44px',
+                display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+                minHeight: '36px', padding: '0.45rem 0.95rem', fontSize: '0.85rem'
               }}
             >
-              <RefreshCw size={15} className={syncing ? 'spin' : ''} />
+              <RefreshCw size={14} className={syncing ? 'spin' : ''} />
               {syncing ? 'Syncing…' : 'Sync PayPal'}
             </button>
 
@@ -1264,25 +1260,21 @@ const ReportsPage = () => {
               <button
                 onClick={() => setCsvMenuOpen(o => !o)}
                 disabled={exportingCsv}
+                className="btn-fintech btn-fintech-outline btn-sm"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.55rem',
-                  padding: '0.8rem 1.25rem',
-                  background: '#f1f5f9', color: '#1e293b',
-                  border: '1.5px solid #cbd5e1',
-                  borderRadius: 'var(--radius-md)', fontSize: '0.9rem',
-                  fontWeight: 700, cursor: exportingCsv ? 'not-allowed' : 'pointer',
-                  minHeight: '44px',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+                  minHeight: '36px', padding: '0.45rem 0.95rem', fontSize: '0.85rem'
                 }}
               >
-                <Download size={15} />
-                {exportingCsv ? 'Exporting CSV…' : 'Export CSV ▾'}
+                <Download size={14} />
+                {exportingCsv ? 'Exporting…' : 'Export CSV ▾'}
               </button>
 
               {csvMenuOpen && (
                 <div style={{
                   position: 'absolute', top: '100%', right: 0, marginTop: '0.4rem',
-                  background: '#fff', border: '1px solid #cbd5e1', borderRadius: '8px',
-                  boxShadow: '0 10px 25px rgba(0,0,0,0.12)', zIndex: 50, minWidth: '220px',
+                  background: '#fff', border: '1px solid var(--border-light)', borderRadius: '8px',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 50, minWidth: '220px',
                   padding: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.2rem',
                 }}>
                   <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', padding: '0.4rem 0.6rem', textTransform: 'uppercase' }}>
@@ -1299,11 +1291,11 @@ const ReportsPage = () => {
                       key={opt.type}
                       onClick={() => handleDownloadCSV(opt.type)}
                       style={{
-                        textAlign: 'left', padding: '0.5rem 0.75rem', background: 'transparent',
-                        border: 'none', borderRadius: '6px', fontSize: '0.85rem', fontWeight: 600,
+                        textAlign: 'left', padding: '0.45rem 0.65rem', background: 'transparent',
+                        border: 'none', borderRadius: '6px', fontSize: '0.82rem', fontWeight: 600,
                         color: 'var(--navy-slate)', cursor: 'pointer',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#f1f5f9'}
+                      onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-subtle)'}
                       onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                     >
                       {opt.label}
@@ -1317,15 +1309,10 @@ const ReportsPage = () => {
             <button
               onClick={handleDownloadPDF}
               disabled={exportingPdf}
+              className="btn-fintech btn-fintech-primary btn-sm"
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.55rem',
-                padding: '0.8rem 1.4rem',
-                background: 'var(--navy-primary)', color: '#fff',
-                border: 'none', borderRadius: 'var(--radius-md)',
-                fontSize: '0.92rem', fontWeight: 700, cursor: exportingPdf ? 'not-allowed' : 'pointer',
-                letterSpacing: '0.01em',
-                boxShadow: '0 3px 10px rgba(0,48,135,0.25)',
-                minHeight: '44px',
+                display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
+                minHeight: '36px', padding: '0.45rem 1rem', fontSize: '0.85rem'
               }}
             >
               {exportingPdf ? (

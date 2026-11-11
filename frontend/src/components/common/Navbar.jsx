@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { ShieldCheck, LogOut, Database, Layers, Lock, Settings, Sparkles, RefreshCw } from 'lucide-react';
+import { ShieldCheck, LogOut, Layers, Lock, Settings, Sparkles, RefreshCw, Menu } from 'lucide-react';
 import PayPalConnectModal from '../settings/PayPalConnectModal';
 import { demoAPI } from '../../services/api';
 
-const Navbar = () => {
+const Navbar = ({ onToggleMobileNav }) => {
   const { user, business, logout, isDemoMode, switchBusinessMode, refreshBusiness } = useAuth();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
@@ -21,7 +21,6 @@ const Navbar = () => {
     try {
       setSwitching(true);
       if (targetMode === 'demo') {
-        // Generate or ensure demo data exists
         await demoAPI.generate();
       }
       await switchBusinessMode(targetMode);
@@ -53,68 +52,90 @@ const Navbar = () => {
   const isLive = !isDemo && paypalMode === 'live';
 
   const accountType = business?.account_type || 'business';
-  const accountTagline = accountType === 'individual'
-    ? 'Personal Financial Intelligence & Savings'
-    : accountType === 'household'
-    ? 'Household Budget & Shared Savings Intelligence'
-    : 'Fintech Cash-Flow & Subscription Intelligence';
 
   const accountBadge = isDemo
     ? 'Demo Mode'
     : accountType === 'individual'
-    ? 'Individual Edition'
+    ? 'Individual'
     : accountType === 'household'
-    ? 'Household Edition'
-    : 'Business Edition';
+    ? 'Household'
+    : 'Business';
+
+  const getInitials = (name) => {
+    if (!name) return 'U';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return parts[0].slice(0, 2).toUpperCase();
+  };
+
+  const initials = getInitials(isDemo ? 'DemoTech' : business?.company_name || user?.email);
 
   return (
     <>
       <header className="top-navbar">
-        <Link to={user ? "/dashboard" : "/"} className="nav-brand-group">
-          <div className="nav-brand-logo">P</div>
-          <div>
-            <div className="nav-brand-title">
-              PayPal <span>SubWise</span> AI
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          {/* Mobile Menu Button */}
+          {user && (
+            <button
+              onClick={onToggleMobileNav}
+              className="mobile-nav-toggle"
+              aria-label="Toggle navigation menu"
+              style={{
+                display: 'none',
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--navy-slate)',
+                cursor: 'pointer',
+                padding: '0.25rem',
+              }}
+            >
+              <Menu size={20} />
+            </button>
+          )}
+
+          <Link to={user ? '/dashboard' : '/'} className="nav-brand-group">
+            <div className="nav-brand-logo">P</div>
+            <div>
+              <div className="nav-brand-title">
+                PayPal <span>SubWise</span> AI
+              </div>
             </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, letterSpacing: '0.02em' }}>
-              {accountTagline}
-            </div>
-          </div>
-          <span className="nav-brand-badge">{accountBadge}</span>
-        </Link>
+            <span className="nav-brand-badge">{accountBadge}</span>
+          </Link>
+        </div>
 
         <div className="nav-right-actions">
-          {/* Environment Mode Switcher / Indicator */}
+          {/* Environment Mode Switcher */}
           {user && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {isDemo ? (
                 <>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.55rem',
-                      background: '#ede9fe',
-                      padding: '0.45rem 1rem',
+                      gap: '0.4rem',
+                      background: '#f5f3ff',
+                      padding: '0.3rem 0.75rem',
                       borderRadius: '9999px',
-                      border: '1.5px solid #c4b5fd',
-                      fontSize: '0.92rem',
-                      fontWeight: 700,
-                      color: '#6d28d9',
+                      border: '1px solid #ddd6fe',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: '#7c3aed',
                     }}
                     title="Active in isolated DemoTech Solutions profile"
                   >
-                    <Sparkles size={16} color="#7c3aed" />
-                    <span>Demo Mode (DemoTech)</span>
+                    <Sparkles size={14} color="#7c3aed" />
+                    <span>Demo Data</span>
                   </div>
                   <button
                     onClick={() => handleToggleMode('sandbox')}
                     disabled={switching}
                     className="btn-fintech btn-fintech-outline btn-sm"
-                    style={{ padding: '0.4rem 0.85rem', fontSize: '0.85rem', minHeight: '36px' }}
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', minHeight: '32px' }}
                     title="Switch to Real PayPal Sandbox Environment"
                   >
-                    {switching ? 'Switching...' : 'Switch to Sandbox'}
+                    {switching ? 'Switching...' : 'To Sandbox'}
                   </button>
                 </>
               ) : (
@@ -124,92 +145,127 @@ const Navbar = () => {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '0.55rem',
-                      background: isSandbox ? '#fef3c7' : isLive ? '#dcfce7' : 'var(--bg-subtle)',
-                      padding: '0.45rem 1rem',
+                      gap: '0.45rem',
+                      background: isSandbox ? '#fef3c7' : isLive ? '#ecfdf5' : 'var(--bg-subtle)',
+                      padding: '0.35rem 0.75rem',
                       borderRadius: '9999px',
-                      border: `1.5px solid ${isSandbox ? '#fde68a' : isLive ? '#bbf7d0' : 'var(--border-light)'}`,
-                      fontSize: '0.92rem',
-                      fontWeight: 700,
-                      color: isSandbox ? 'var(--amber-dark)' : isLive ? 'var(--emerald-dark)' : 'var(--navy-primary)',
+                      border: `1px solid ${isSandbox ? '#fde68a' : isLive ? '#a7f3d0' : 'var(--border-light)'}`,
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: isSandbox ? '#92400e' : isLive ? '#065f46' : 'var(--navy-primary)',
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease'
+                      transition: 'all 0.15s ease',
                     }}
                     title="Click to configure PayPal Developer Sandbox settings"
                   >
                     {isSandbox ? (
                       <>
-                        <Layers size={17} color="var(--amber-dark)" />
-                        <span>PayPal Sandbox</span>
+                        <Layers size={14} color="#b45309" />
+                        <span>Sandbox</span>
                       </>
                     ) : (
                       <>
-                        <Lock size={17} color="var(--emerald-dark)" />
-                        <span>PayPal Live</span>
+                        <Lock size={14} color="#059669" />
+                        <span>Live</span>
                       </>
                     )}
-                    <Settings size={14} style={{ opacity: 0.65, marginLeft: '0.3rem' }} />
+                    <Settings size={12} style={{ opacity: 0.6, marginLeft: '0.15rem' }} />
                   </button>
                   <button
                     onClick={() => handleToggleMode('demo')}
                     disabled={switching}
+                    className="btn-fintech btn-fintech-outline btn-sm"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.45rem',
-                      padding: '0.4rem 0.85rem',
-                      background: '#ede9fe',
-                      color: '#6d28d9',
-                      border: '1.5px solid #c4b5fd',
-                      borderRadius: 'var(--radius-md)',
-                      fontSize: '0.85rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      minHeight: '36px'
+                      padding: '0.35rem 0.75rem',
+                      fontSize: '0.8rem',
+                      minHeight: '32px',
+                      color: '#7c3aed',
+                      borderColor: '#ddd6fe',
+                      background: '#faf5ff',
                     }}
-                    title="Switch to Demo Environment with rich illustrative 6-month historical data"
+                    title="Switch to Demo Environment"
                   >
-                    <Sparkles size={15} color="#7c3aed" />
-                    <span>{switching ? 'Loading Demo...' : 'Demo Mode'}</span>
+                    <Sparkles size={13} color="#7c3aed" />
+                    <span>{switching ? '...' : 'Demo'}</span>
                   </button>
                 </>
               )}
             </div>
           )}
 
-          {/* User / Business Profile Header */}
+          {/* User / Business Profile Avatar Pill */}
           {user ? (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '1.15rem',
-              borderLeft: '1.5px solid var(--border-light)',
-              paddingLeft: '1.25rem'
-            }}>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--navy-slate)' }}>
-                  {isDemo ? 'DemoTech Solutions' : (business?.company_name || 'My Business')}
-                </div>
-                <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
-                  {user?.email || 'Authenticated User'}
-                </div>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                borderLeft: '1px solid var(--border-light)',
+                paddingLeft: '0.85rem',
+              }}
+            >
+              <div
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: 'var(--navy-primary)',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
+                title={user?.email}
+              >
+                {initials}
+              </div>
+
+              <div className="nav-user-meta" style={{ display: 'flex', flexDirection: 'column' }}>
+                <span
+                  style={{
+                    fontSize: '0.85rem',
+                    fontWeight: 600,
+                    color: 'var(--navy-slate)',
+                    maxWidth: '130px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {isDemo ? 'DemoTech' : business?.company_name || 'My Account'}
+                </span>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    color: 'var(--text-muted)',
+                    maxWidth: '130px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {user?.email}
+                </span>
               </div>
 
               <button
                 onClick={handleLogout}
                 className="btn-fintech btn-fintech-outline btn-sm"
                 title="Log Out of Workspace"
-                style={{ padding: '0.55rem 0.75rem', minHeight: '40px' }}
+                style={{ padding: '0.35rem 0.55rem', minHeight: '32px', color: 'var(--text-muted)' }}
               >
-                <LogOut size={18} />
+                <LogOut size={15} />
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <Link to="/login" className="btn-fintech btn-fintech-outline btn-sm">
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <Link to="/login" className="btn-fintech btn-fintech-outline btn-sm" style={{ minHeight: '32px' }}>
                 Log In
               </Link>
-              <Link to="/register" className="btn-fintech btn-fintech-primary btn-sm">
+              <Link to="/register" className="btn-fintech btn-fintech-primary btn-sm" style={{ minHeight: '32px' }}>
                 Get Started
               </Link>
             </div>
@@ -217,58 +273,62 @@ const Navbar = () => {
         </div>
       </header>
 
-      {/* Prominent Global Banner when in Demo Mode */}
+      {/* Demo Banner */}
       {user && isDemo && (
-        <div style={{
-          background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 100%)',
-          color: '#ffffff',
-          padding: '0.55rem 1.75rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '0.75rem',
-          fontSize: '0.88rem',
-          fontWeight: 600,
-          borderBottom: '2px solid #5b21b6',
-          boxShadow: '0 2px 8px rgba(109, 40, 217, 0.25)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span style={{
-              background: '#ffffff',
-              color: '#6d28d9',
-              padding: '0.2rem 0.6rem',
-              borderRadius: '9999px',
-              fontWeight: 800,
-              fontSize: '0.75rem',
-              letterSpacing: '0.04em'
-            }}>DEMO MODE</span>
+        <div
+          style={{
+            background: 'linear-gradient(90deg, #6d28d9 0%, #4f46e5 100%)',
+            color: '#ffffff',
+            padding: '0.45rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.5rem',
+            fontSize: '0.82rem',
+            fontWeight: 500,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <span
+              style={{
+                background: '#ffffff',
+                color: '#6d28d9',
+                padding: '0.12rem 0.5rem',
+                borderRadius: '9999px',
+                fontWeight: 700,
+                fontSize: '0.7rem',
+                letterSpacing: '0.04em',
+              }}
+            >
+              DEMO
+            </span>
             <span>
-              Isolated Business Profile: <strong>DemoTech Solutions</strong> (Software Services). Illustrative 6-month historical dataset loaded. Real Sandbox records remain untouched.
+              Isolated Profile: <strong>DemoTech Solutions</strong>. Real Sandbox records remain untouched.
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <button
               onClick={handleResetDemo}
               disabled={resetting}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                background: 'rgba(255, 255, 255, 0.18)',
-                border: '1px solid rgba(255, 255, 255, 0.35)',
+                gap: '0.3rem',
+                background: 'rgba(255, 255, 255, 0.16)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
                 color: '#ffffff',
-                borderRadius: '6px',
-                padding: '0.3rem 0.75rem',
+                borderRadius: '5px',
+                padding: '0.22rem 0.6rem',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: 700
+                fontSize: '0.76rem',
+                fontWeight: 600,
               }}
-              title="Safely regenerates the standard 6-month illustrative dataset"
+              title="Safely regenerates standard illustrative dataset"
             >
-              <RefreshCw size={13} className={resetting ? 'spin' : ''} />
-              <span>{resetting ? 'Resetting...' : 'Reset Demo Data'}</span>
+              <RefreshCw size={12} className={resetting ? 'spin' : ''} />
+              <span>{resetting ? 'Resetting...' : 'Reset Data'}</span>
             </button>
             <button
               onClick={() => handleToggleMode('sandbox')}
@@ -277,15 +337,15 @@ const Navbar = () => {
                 background: '#ffffff',
                 border: 'none',
                 color: '#6d28d9',
-                borderRadius: '6px',
-                padding: '0.3rem 0.85rem',
+                borderRadius: '5px',
+                padding: '0.22rem 0.7rem',
                 cursor: 'pointer',
-                fontSize: '0.82rem',
-                fontWeight: 800
+                fontSize: '0.76rem',
+                fontWeight: 700,
               }}
-              title="Return to real Sandbox environment"
+              title="Return to Sandbox"
             >
-              Exit to Sandbox
+              Exit Demo
             </button>
           </div>
         </div>

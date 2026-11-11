@@ -128,42 +128,42 @@ const SubscriptionsPage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-slate)', letterSpacing: '-0.03em', marginBottom: '0.45rem', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
             Subscription Expense Management
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
             Comprehensive expense analysis, cadence normalization, 7-category breakdown, and recurring commitments
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
           <button
             onClick={handleSync}
             disabled={syncing}
             className="btn-fintech btn-fintech-primary btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', minHeight: '48px', padding: '0.65rem 1.35rem', fontSize: '1rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '36px', padding: '0.45rem 1rem', fontSize: '0.85rem' }}
           >
-            <RefreshCw size={17} className={syncing ? 'spin-icon' : ''} />
-            <span>{syncing ? 'Scanning...' : 'Sync PayPal Subscriptions'}</span>
+            <RefreshCw size={14} className={syncing ? 'spin' : ''} />
+            <span>{syncing ? 'Scanning...' : 'Sync Subscriptions'}</span>
           </button>
         </div>
       </div>
 
       {syncStatus && (
         <div style={{
-          padding: '0.95rem 1.35rem',
+          padding: '0.65rem 1rem',
           borderRadius: 'var(--radius-sm)',
-          fontSize: '1rem',
+          fontSize: '0.85rem',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.75rem',
+          gap: '0.55rem',
           background: syncStatus.type === 'success' ? '#dcfce7' : '#fee2e2',
           color: syncStatus.type === 'success' ? 'var(--emerald-dark)' : 'var(--rose-dark)',
-          border: `1.5px solid ${syncStatus.type === 'success' ? '#bbf7d0' : '#fecaca'}`
+          border: `1px solid ${syncStatus.type === 'success' ? '#bbf7d0' : '#fecaca'}`
         }}>
           {syncStatus.text}
         </div>
@@ -172,122 +172,122 @@ const SubscriptionsPage = () => {
       {/* High-Level Analysis Metric Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-        gap: '1.35rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: '1rem',
       }}>
         {/* Monthly Commitment */}
-        <div className="fintech-card" style={{ padding: '1.45rem 1.65rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Monthly Spend Commitment
             </span>
-            <Calendar size={20} color="var(--navy-primary)" />
+            <Calendar size={17} color="var(--navy-primary)" />
           </div>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
             ${monthlySaaSSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-muted)' }}>/mo</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>/mo</span>
           </div>
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
             {analysis?.confirmed_monthly_commitment ? `$${analysis.confirmed_monthly_commitment.toFixed(2)} confirmed` : '0 confirmed'} · {analysis?.potential_monthly_commitment ? `$${analysis.potential_monthly_commitment.toFixed(2)} potential` : '0 potential'}
           </div>
         </div>
 
         {/* Annual Commitment */}
-        <div className="fintech-card" style={{ padding: '1.45rem 1.65rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Estimated Annual Commitments
             </span>
-            <DollarSign size={20} color="var(--paypal-blue)" />
+            <DollarSign size={17} color="var(--paypal-blue)" />
           </div>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
             ${annualSaaSSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text-muted)' }}>/yr</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>/yr</span>
           </div>
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
             Historical actual: ${Number(analysis?.actual_historical_spend_total || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} settled
           </div>
         </div>
 
         {/* Revenue Impact */}
         <div className="fintech-card" style={{
-          padding: '1.45rem 1.65rem',
+          padding: '1.15rem 1.35rem',
           background: analysis?.revenue_comparison?.has_sufficient_revenue_data
             ? (analysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-bg)' : analysis.revenue_comparison.burden_level === 'moderate' ? 'var(--amber-bg)' : 'var(--rose-bg)')
             : 'var(--bg-surface)'
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Revenue vs Subscriptions
             </span>
-            <TrendingUp size={20} color={analysis?.revenue_comparison?.has_sufficient_revenue_data ? (analysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : 'var(--amber-dark)') : 'var(--text-muted)'} />
+            <TrendingUp size={17} color={analysis?.revenue_comparison?.has_sufficient_revenue_data ? (analysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : 'var(--amber-dark)') : 'var(--text-muted)'} />
           </div>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: analysis?.revenue_comparison?.has_sufficient_revenue_data ? (analysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : 'var(--amber-dark)') : 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: analysis?.revenue_comparison?.has_sufficient_revenue_data ? (analysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : 'var(--amber-dark)') : 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace' }}>
             {analysis?.revenue_comparison?.revenue_percentage !== null && analysis?.revenue_comparison?.revenue_percentage !== undefined
               ? `${analysis.revenue_comparison.revenue_percentage}%`
               : 'N/A'}
           </div>
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
             {analysis?.revenue_comparison?.explanation || 'Awaiting operating sales'}
           </div>
         </div>
 
         {/* Spending Velocity & Alerts */}
-        <div className="fintech-card" style={{ padding: '1.45rem 1.65rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.35rem' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Spending Velocity &amp; Trend
             </span>
-            <Zap size={20} color="var(--indigo-accent)" />
+            <Zap size={17} color="var(--indigo-accent)" />
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--navy-slate)', textTransform: 'capitalize' }}>
+          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--navy-slate)', textTransform: 'capitalize' }}>
             {analysis?.spending_trends?.trend_direction ? analysis.spending_trends.trend_direction.replace('_', ' ') : 'Insufficient Data'}
           </div>
-          <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.45rem' }}>
-            {analysis?.spending_trends?.trend_summary || 'Synchronize transactions to analyze spending velocity'}
+          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+            {analysis?.spending_trends?.trend_summary || 'Synchronize transactions to analyze velocity'}
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '2px solid var(--border-light)', paddingBottom: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-light)', paddingBottom: '0.4rem' }}>
         <button
           onClick={() => setActiveTab('analysis')}
           style={{
-            padding: '0.65rem 1.35rem',
-            borderRadius: 'var(--radius-md)',
+            padding: '0.45rem 1rem',
+            borderRadius: 'var(--radius-sm)',
             border: 'none',
-            fontSize: '0.95rem',
-            fontWeight: 700,
+            fontSize: '0.85rem',
+            fontWeight: 600,
             cursor: 'pointer',
             background: activeTab === 'analysis' ? 'var(--navy-primary)' : 'transparent',
             color: activeTab === 'analysis' ? '#fff' : 'var(--text-muted)',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.45rem'
+            gap: '0.4rem'
           }}
         >
-          <BarChart3 size={17} />
+          <BarChart3 size={15} />
           <span>Expense Analysis &amp; Categories</span>
         </button>
 
         <button
           onClick={() => setActiveTab('directory')}
           style={{
-            padding: '0.65rem 1.35rem',
-            borderRadius: 'var(--radius-md)',
+            padding: '0.45rem 1rem',
+            borderRadius: 'var(--radius-sm)',
             border: 'none',
-            fontSize: '0.95rem',
-            fontWeight: 700,
+            fontSize: '0.85rem',
+            fontWeight: 600,
             cursor: 'pointer',
             background: activeTab === 'directory' ? 'var(--navy-primary)' : 'transparent',
             color: activeTab === 'directory' ? '#fff' : 'var(--text-muted)',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.45rem'
+            gap: '0.4rem'
           }}
         >
-          <Layers size={17} />
+          <Layers size={15} />
           <span>Subscription Directory ({subscriptions.length})</span>
         </button>
       </div>

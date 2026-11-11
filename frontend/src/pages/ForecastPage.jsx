@@ -451,38 +451,38 @@ const ForecastPage = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-slate)', letterSpacing: '-0.03em', marginBottom: '0.45rem', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
             Cash Flow Forecast
           </h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
               Calendar-aware sensitivity projections &amp; subscription scheduling · {displayCompanyName}
             </p>
             {status && <StatusBadge status={status} />}
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
           <button
             onClick={loadForecast}
             disabled={loading}
             className="btn-fintech btn-fintech-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', minHeight: '44px' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '36px', padding: '0.45rem 0.95rem', fontSize: '0.85rem' }}
           >
-            <RefreshCw size={15} className={loading ? 'spin-icon' : ''} />
+            <RefreshCw size={14} className={loading ? 'spin' : ''} />
             Refresh
           </button>
           <button
             onClick={handleSync}
             disabled={syncing}
             className="btn-fintech btn-fintech-primary btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', minHeight: '48px', padding: '0.65rem 1.35rem', fontSize: '1rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '36px', padding: '0.45rem 1rem', fontSize: '0.85rem' }}
           >
-            <RefreshCw size={17} className={syncing ? 'spin-icon' : ''} />
+            <RefreshCw size={14} className={syncing ? 'spin' : ''} />
             {syncing ? 'Synchronizing…' : 'Sync Stream'}
           </button>
         </div>

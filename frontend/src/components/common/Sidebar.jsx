@@ -12,133 +12,295 @@ import {
   TrendingDown,
   MessageSquare,
   Home,
-  User,
-  Building2,
-  ShoppingCart,
-  Zap,
   Activity,
-  Search,
+  X
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ mobileOpen, onClose }) => {
   const { user, business } = useAuth();
   const accountType = business?.account_type || 'business';
 
-  let menuItems = [];
-  let headerLabel = 'Fintech Navigation';
-  let footerTitle = 'Solvency Assurance';
-  let footerDesc = 'Continuous subscription commitment tracking protects SMB operating liquidity.';
+  // Build structured navigation groups based on account edition
+  const sections = [];
 
-  if (accountType === 'individual') {
-    headerLabel = 'Personal Intelligence';
-    footerTitle = 'Savings Assurance';
-    footerDesc = 'Automated recurring expense monitoring keeps you ahead of silent subscription leaks.';
-    menuItems = [
-      { to: '/dashboard', label: 'Personal Dashboard', icon: LayoutDashboard },
-      { to: '/expenses', label: 'Income & Expenses', icon: TrendingDown },
-      { to: '/insights', label: 'AI Insights', icon: Activity, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-      { to: '/savings-discovery', label: 'Savings Discovery', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
-      { to: '/subscriptions', label: 'Subscriptions & Apps', icon: Layers },
-      { to: '/forecast', label: 'Cash Flow & Income', icon: LineChart },
-      { to: '/recommendations', label: 'AI Savings Advice', icon: Sparkles, badge: 'Tailored', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
-      { to: '/assistant', label: 'Savings Assistant', icon: MessageSquare, badge: 'AI', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-      { to: '/reports', label: 'Spending Reports', icon: FileBarChart },
-    ];
-  } else if (accountType === 'household') {
-    headerLabel = 'Household Intelligence';
-    footerTitle = 'Household Budgeting';
-    footerDesc = 'Compare grocery prices, detect utility spikes, and streamline shared living costs.';
-    menuItems = [
-      { to: '/dashboard', label: 'Household Overview', icon: LayoutDashboard },
-      { to: '/household', label: 'Household Workspace', icon: Home },
-      { to: '/expenses', label: 'Shared Expenses', icon: TrendingDown },
-      { to: '/insights', label: 'AI Insights', icon: Activity, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-      { to: '/savings-discovery', label: 'Savings Discovery', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
-      { to: '/subscriptions', label: 'Shared Subscriptions', icon: Layers },
-      { to: '/forecast', label: 'Household Cash Flow', icon: LineChart },
-      { to: '/recommendations', label: 'Grocery & Utility AI', icon: Sparkles, badge: 'Deals', badgeColor: '#d97706', badgeBg: '#fef3c7', badgeBorder: '#fde68a' },
-      { to: '/assistant', label: 'Family AI Assistant', icon: MessageSquare, badge: 'AI', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-      { to: '/reports', label: 'Shared Bill Reports', icon: FileBarChart },
-    ];
-  } else {
-    // Small Business
-    headerLabel = 'Fintech Navigation';
-    footerTitle = 'Solvency Assurance';
-    footerDesc = 'Continuous subscription commitment tracking protects SMB operating liquidity.';
-    menuItems = [
-      { to: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
-      { to: '/subscriptions', label: 'Subscription Manager', icon: Layers },
-      { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
-      { to: '/simulator', label: 'Scenario Simulator', icon: Sliders },
-      { to: '/recommendations', label: 'AI Recommendations', icon: Sparkles, badge: '4 New' },
-      { to: '/savings-discovery', label: 'Vendor Comparison', icon: Sparkles, badge: 'AI', badgeColor: '#059669', badgeBg: '#ecfdf5', badgeBorder: '#a7f3d0' },
-      { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
-      { to: '/assistant', label: 'AI Assistant', icon: MessageSquare, badge: 'New', badgeColor: '#7c3aed', badgeBg: '#f5f3ff', badgeBorder: '#e9d5ff' },
-    ];
+  // 1. OVERVIEW
+  sections.push({
+    title: 'Overview',
+    items: [
+      {
+        to: '/dashboard',
+        label: accountType === 'individual' ? 'Personal Dashboard' : accountType === 'household' ? 'Household Overview' : 'Main Dashboard',
+        icon: LayoutDashboard,
+      },
+    ],
+  });
+
+  // 2. HOUSEHOLD WORKSPACE (If Household account)
+  if (accountType === 'household') {
+    sections.push({
+      title: 'Household',
+      items: [
+        {
+          to: '/household',
+          label: 'Household Workspace',
+          icon: Home,
+          badge: 'Family',
+          badgeColor: '#0284c7',
+          badgeBg: '#f0f9ff',
+          badgeBorder: '#bae6fd',
+        },
+      ],
+    });
   }
 
+  // 3. FINANCIAL MANAGEMENT
+  if (accountType === 'individual') {
+    sections.push({
+      title: 'Financial Management',
+      items: [
+        { to: '/expenses', label: 'Income & Expenses', icon: TrendingDown },
+        { to: '/subscriptions', label: 'Subscriptions & Bills', icon: Layers },
+      ],
+    });
+  } else if (accountType === 'household') {
+    sections.push({
+      title: 'Financial Management',
+      items: [
+        { to: '/expenses', label: 'Shared Expenses', icon: TrendingDown },
+        { to: '/subscriptions', label: 'Shared Subscriptions', icon: Layers },
+      ],
+    });
+  } else {
+    // Business
+    sections.push({
+      title: 'Financial Management',
+      items: [
+        { to: '/subscriptions', label: 'Subscriptions', icon: Layers },
+        { to: '/expenses', label: 'Income & Expenses', icon: TrendingDown },
+      ],
+    });
+  }
+
+  // 4. INTELLIGENCE
+  if (accountType === 'individual') {
+    sections.push({
+      title: 'Intelligence',
+      items: [
+        {
+          to: '/insights',
+          label: 'Financial Health',
+          icon: Activity,
+          badge: 'Score',
+          badgeColor: '#16a34a',
+          badgeBg: '#f0fdf4',
+          badgeBorder: '#bbf7d0',
+        },
+        {
+          to: '/savings-discovery',
+          label: 'Savings Discovery',
+          icon: Sparkles,
+          badge: 'AI',
+          badgeColor: '#059669',
+          badgeBg: '#ecfdf5',
+          badgeBorder: '#a7f3d0',
+        },
+        { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
+        {
+          to: '/recommendations',
+          label: 'Recommendations',
+          icon: Sparkles,
+          badge: 'Tailored',
+          badgeColor: '#0284c7',
+          badgeBg: '#f0f9ff',
+          badgeBorder: '#bae6fd',
+        },
+        { to: '/reports', label: 'Spending Reports', icon: FileBarChart },
+      ],
+    });
+  } else if (accountType === 'household') {
+    sections.push({
+      title: 'Intelligence',
+      items: [
+        {
+          to: '/insights',
+          label: 'Financial Health',
+          icon: Activity,
+          badge: 'Score',
+          badgeColor: '#16a34a',
+          badgeBg: '#f0fdf4',
+          badgeBorder: '#bbf7d0',
+        },
+        {
+          to: '/savings-discovery',
+          label: 'Savings Discovery',
+          icon: Sparkles,
+          badge: 'AI',
+          badgeColor: '#059669',
+          badgeBg: '#ecfdf5',
+          badgeBorder: '#a7f3d0',
+        },
+        { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
+        {
+          to: '/recommendations',
+          label: 'Grocery & Deals AI',
+          icon: Sparkles,
+          badge: 'Deals',
+          badgeColor: '#d97706',
+          badgeBg: '#fef3c7',
+          badgeBorder: '#fde68a',
+        },
+        { to: '/reports', label: 'Shared Bill Reports', icon: FileBarChart },
+      ],
+    });
+  } else {
+    // Business
+    sections.push({
+      title: 'Intelligence',
+      items: [
+        { to: '/forecast', label: 'Cash Flow Forecast', icon: LineChart },
+        { to: '/simulator', label: 'Scenario Simulator', icon: Sliders },
+        {
+          to: '/recommendations',
+          label: 'Recommendations',
+          icon: Sparkles,
+          badge: 'AI',
+          badgeColor: '#059669',
+          badgeBg: '#ecfdf5',
+          badgeBorder: '#a7f3d0',
+        },
+        {
+          to: '/savings-discovery',
+          label: 'Vendor Comparison',
+          icon: Sparkles,
+        },
+        { to: '/reports', label: 'Financial Reports', icon: FileBarChart },
+      ],
+    });
+  }
+
+  // 5. ASSISTANCE
+  sections.push({
+    title: 'Assistance',
+    items: [
+      {
+        to: '/assistant',
+        label: accountType === 'household' ? 'Family AI Assistant' : 'AI Assistant',
+        icon: MessageSquare,
+        badge: 'Copilot',
+        badgeColor: '#7c3aed',
+        badgeBg: '#f5f3ff',
+        badgeBorder: '#ddd6fe',
+      },
+    ],
+  });
+
+  // 6. ADMINISTRATION (if user has is_admin flag)
   if (user?.is_admin) {
-    menuItems.push({
-      to: '/admin',
-      label: 'Admin Portal',
-      icon: ShieldCheck,
-      badge: 'Admin',
-      badgeColor: '#ef4444',
-      badgeBg: '#fef2f2',
-      badgeBorder: '#fecaca',
+    sections.push({
+      title: 'Administration',
+      items: [
+        {
+          to: '/admin',
+          label: 'Admin Portal',
+          icon: ShieldCheck,
+          badge: 'Admin',
+          badgeColor: '#dc2626',
+          badgeBg: '#fef2f2',
+          badgeBorder: '#fecaca',
+        },
+      ],
     });
   }
 
   return (
-    <aside className="app-sidebar">
-      <div className="sidebar-header">
-        <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {headerLabel}
+    <aside className={`app-sidebar ${mobileOpen ? 'mobile-open' : ''}`}>
+      <div className="sidebar-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          {accountType === 'individual' ? 'Personal Finance' : accountType === 'household' ? 'Household Finance' : 'Commercial Fintech'}
         </div>
+        {mobileOpen && (
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#94a3b8',
+              cursor: 'pointer',
+              padding: '0.2rem',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            aria-label="Close menu"
+          >
+            <X size={18} />
+          </button>
+        )}
       </div>
 
       <nav className="sidebar-menu-list">
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
-            >
-              <Icon size={22} />
-              <span>{item.label}</span>
-              {item.badge && (
-                <span
-                  className="sidebar-item-badge"
-                  style={item.badgeColor ? {
-                    color: item.badgeColor,
-                    background: item.badgeBg,
-                    border: `1px solid ${item.badgeBorder}`,
-                  } : undefined}
+        {sections.map((section, sIdx) => (
+          <div key={sIdx} className="sidebar-section-group">
+            <div className="sidebar-section-title">{section.title}</div>
+            {section.items.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  onClick={onClose}
+                  className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}
                 >
-                  {item.badge}
-                </span>
-              )}
-            </NavLink>
-          );
-        })}
+                  <Icon size={18} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</span>
+                  {item.badge && (
+                    <span
+                      className="sidebar-item-badge"
+                      style={
+                        item.badgeColor
+                          ? {
+                              color: item.badgeColor,
+                              background: item.badgeBg,
+                              border: `1px solid ${item.badgeBorder}`,
+                            }
+                          : undefined
+                      }
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       <div className="sidebar-footer">
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: 'var(--radius-md)',
-          padding: '1.15rem',
-          fontSize: '0.92rem',
-          color: '#cbd5e1',
-          lineHeight: 1.55
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#38bdf8', fontWeight: 700, marginBottom: '0.45rem', fontSize: '0.95rem' }}>
-            <ShieldCheck size={18} /> {footerTitle}
+        <div
+          style={{
+            background: 'rgba(255, 255, 255, 0.04)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.85rem',
+            fontSize: '0.8rem',
+            color: '#94a3b8',
+            lineHeight: 1.45,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              color: '#38bdf8',
+              fontWeight: 600,
+              marginBottom: '0.3rem',
+              fontSize: '0.82rem',
+            }}
+          >
+            <ShieldCheck size={15} /> Verified Liquidity
           </div>
-          {footerDesc}
+          Continuous subscription commitment tracking protects net operating reserves.
         </div>
       </div>
     </aside>

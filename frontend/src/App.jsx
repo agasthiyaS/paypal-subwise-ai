@@ -78,12 +78,20 @@ const LoadingScreen = () => (
 /* ============================================================ */
 const ProtectedLayout = () => {
   const { token } = useAuth();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const location = useLocation();
+
+  React.useEffect(() => {
+    setMobileOpen(false);
+  }, [location.pathname]);
+
   if (!token) return <Navigate to="/login" replace />;
   return (
     <div className="app-layout">
-      <Sidebar />
+      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      {mobileOpen && <div className="mobile-nav-backdrop" onClick={() => setMobileOpen(false)} />}
       <div className="main-viewport">
-        <Navbar />
+        <Navbar onToggleMobileNav={() => setMobileOpen((prev) => !prev)} />
         <DemoDisclaimerBanner />
         <main className="content-container">
           <Outlet />

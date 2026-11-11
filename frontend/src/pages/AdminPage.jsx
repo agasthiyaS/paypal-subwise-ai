@@ -86,26 +86,25 @@ export default function AdminPage() {
   }
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '1.5rem' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
       {/* Header */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '2rem',
+        alignItems: 'center',
         flexWrap: 'wrap',
         gap: '1rem',
       }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.25rem' }}>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800 }}>Platform Operations & Metrics</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.2rem' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', margin: 0 }}>Platform Operations &amp; Metrics</h1>
             <span style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
-              padding: '0.2rem 0.6rem',
+              padding: '0.15rem 0.55rem',
               borderRadius: '99px',
-              fontSize: '0.75rem',
+              fontSize: '0.72rem',
               fontWeight: 600,
               background: 'rgba(16, 185, 129, 0.1)',
               color: '#10b981',
@@ -113,24 +112,21 @@ export default function AdminPage() {
               <CheckCircle2 size={12} /> {stats?.system_status || 'OPERATIONAL'}
             </span>
           </div>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
             Real-time multi-tenant platform metrics, PayPal integration health, and user management.
           </p>
         </div>
         <button
           onClick={loadData}
           disabled={loading}
+          className="btn-fintech btn-fintech-outline btn-sm"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.6rem 1.2rem',
-            background: 'var(--bg-card, #fff)',
-            border: '1px solid var(--border-light, #e2e8f0)',
-            borderRadius: '8px',
+            gap: '0.45rem',
+            padding: '0.45rem 1rem',
+            minHeight: '36px',
             fontSize: '0.85rem',
-            fontWeight: 600,
-            cursor: 'pointer',
           }}
         >
           <RefreshCw size={14} className={loading ? 'spin' : ''} />
@@ -140,12 +136,11 @@ export default function AdminPage() {
 
       {actionMsg && (
         <div style={{
-          padding: '0.75rem 1rem',
-          borderRadius: '8px',
+          padding: '0.65rem 1rem',
+          borderRadius: 'var(--radius-sm)',
           background: 'rgba(14, 165, 233, 0.1)',
           color: '#0284c7',
-          marginBottom: '1.5rem',
-          fontSize: '0.9rem',
+          fontSize: '0.85rem',
         }}>
           {actionMsg}
         </div>
@@ -153,11 +148,11 @@ export default function AdminPage() {
 
       {error && (
         <div style={{
-          padding: '1rem',
-          borderRadius: '8px',
+          padding: '0.65rem 1rem',
+          borderRadius: 'var(--radius-sm)',
           background: 'rgba(239, 68, 68, 0.1)',
           color: '#ef4444',
-          marginBottom: '1.5rem',
+          fontSize: '0.85rem',
         }}>
           {error}
         </div>
@@ -166,86 +161,61 @@ export default function AdminPage() {
       {/* KPI Stat Cards */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        gap: '1.25rem',
-        marginBottom: '2rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+        gap: '1rem',
       }}>
         {/* Total Users */}
-        <div style={{
-          background: 'var(--bg-card, #fff)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          border: '1px solid var(--border-light, #e2e8f0)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>PLATFORM USERS</span>
-            <Users size={18} color="var(--paypal-blue, #0070ba)" />
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>PLATFORM USERS</span>
+            <Users size={16} color="var(--paypal-blue)" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace', marginBottom: '0.25rem' }}>
             {stats ? stats.total_users : '—'}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Individual: {stats?.account_types?.individual || 0} • Household: {stats?.account_types?.household || 0} • Business: {stats?.account_types?.business || 0}
           </div>
         </div>
 
         {/* Connected PayPal */}
-        <div style={{
-          background: 'var(--bg-card, #fff)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          border: '1px solid var(--border-light, #e2e8f0)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>CONNECTED PAYPALS</span>
-            <CreditCard size={18} color="#10b981" />
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>CONNECTED PAYPALS</span>
+            <CreditCard size={16} color="#10b981" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace', marginBottom: '0.25rem' }}>
             {stats ? stats.connected_paypals : '—'}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            Live OAuth & Sandbox connected profiles
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+            Live OAuth &amp; Sandbox connected profiles
           </div>
         </div>
 
         {/* Total Transactions & Subscriptions */}
-        <div style={{
-          background: 'var(--bg-card, #fff)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          border: '1px solid var(--border-light, #e2e8f0)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>FINANCIAL LEDGER</span>
-            <Layers size={18} color="#8b5cf6" />
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>FINANCIAL LEDGER</span>
+            <Layers size={16} color="#8b5cf6" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace', marginBottom: '0.25rem' }}>
             {stats ? stats.total_transactions : '—'}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Transactions recorded • {stats?.total_subscriptions || 0} Active Subscriptions
           </div>
         </div>
 
         {/* Webhook Intelligence */}
-        <div style={{
-          background: 'var(--bg-card, #fff)',
-          borderRadius: '12px',
-          padding: '1.5rem',
-          border: '1px solid var(--border-light, #e2e8f0)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>WEBHOOK HEALTH</span>
-            <Activity size={18} color="#f59e0b" />
+        <div className="fintech-card" style={{ padding: '1.15rem 1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase' }}>WEBHOOK HEALTH</span>
+            <Activity size={16} color="#f59e0b" />
           </div>
-          <div style={{ fontSize: '2rem', fontWeight: 800, marginBottom: '0.5rem' }}>
+          <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', fontFamily: 'JetBrains Mono, monospace', marginBottom: '0.25rem' }}>
             {stats ? `${stats.webhook_health?.verified || 0} / ${stats.webhook_health?.total_received || 0}` : '—'}
           </div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
             Verified events • {stats?.webhook_health?.failed_or_rejected || 0} failed/rejected
           </div>
         </div>

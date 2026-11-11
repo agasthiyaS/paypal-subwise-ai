@@ -530,153 +530,134 @@ const DashboardPage = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
 
       {/* Page Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-slate)', letterSpacing: '-0.03em', marginBottom: '0.45rem', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', marginBottom: '0.2rem' }}>
             Executive Dashboard
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
             {displayCompanyName} — Cash-flow &amp; Subscription Intelligence
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={() => setModalOpen(true)}
             className="btn-fintech btn-fintech-outline btn-sm"
-            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', fontSize: '1rem', minHeight: '48px', padding: '0.65rem 1.35rem' }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.85rem', minHeight: '36px', padding: '0.45rem 0.95rem' }}
           >
-            <Settings size={18} color="var(--paypal-blue)" />
+            <Settings size={15} color="var(--paypal-blue)" />
             <span>PayPal Setup</span>
           </button>
           <Link
             to="/simulator"
+            className="btn-fintech btn-fintech-primary btn-sm"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.55rem',
-              padding: '0.85rem 1.65rem',
-              background: 'var(--navy-primary)',
-              color: '#fff',
-              borderRadius: 'var(--radius-md)',
-              fontWeight: 700,
-              fontSize: '1rem',
+              gap: '0.45rem',
+              fontSize: '0.85rem',
+              minHeight: '36px',
+              padding: '0.45rem 1rem',
               textDecoration: 'none',
-              boxShadow: '0 3px 10px rgba(0, 48, 135, 0.25)',
-              minHeight: '48px',
             }}
           >
-            Run Scenario Simulator <ArrowRight size={18} />
+            Scenario Simulator <ArrowRight size={15} />
           </Link>
         </div>
       </div>
 
       {/* PayPal Stream Intelligence & Synchronization Banner */}
       <div className="fintech-card" style={{
-        padding: '1.65rem 2rem',
+        padding: '0.95rem 1.25rem',
         background: isDemo
-          ? 'linear-gradient(135deg, #f5f3ff 0%, #ffffff 100%)'
+          ? '#faf5ff'
           : isSandbox
-          ? 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)'
+          ? '#fffdf5'
           : isLive
-          ? 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'
-          : 'linear-gradient(135deg, var(--bg-subtle) 0%, #ffffff 100%)',
-        border: `1.5px solid ${isDemo ? '#c4b5fd' : isSandbox ? '#fde68a' : isLive ? '#bbf7d0' : 'var(--border-light)'}`,
-        boxShadow: 'var(--shadow-sm)'
+          ? '#f0fdf4'
+          : 'var(--bg-surface)',
+        borderColor: isDemo ? '#ddd6fe' : isSandbox ? '#fde68a' : isLive ? '#bbf7d0' : 'var(--border-light)',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.25rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.35rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
             <div style={{
-              width: '56px',
-              height: '56px',
-              borderRadius: 'var(--radius-md)',
-              background: isDemo ? '#ede9fe' : isSandbox ? '#fef3c7' : isLive ? '#dcfce7' : 'var(--paypal-blue-subtle)',
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              background: isDemo ? '#ede9fe' : isSandbox ? '#fef3c7' : isLive ? '#dcfce7' : 'var(--bg-subtle)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: `1.5px solid ${isDemo ? '#a78bfa' : isSandbox ? '#fde68a' : isLive ? '#86efac' : '#bae6fd'}`
+              border: `1px solid ${isDemo ? '#c4b5fd' : isSandbox ? '#fde68a' : isLive ? '#86efac' : 'var(--border-light)'}`,
+              flexShrink: 0
             }}>
               {isDemo ? (
-                <Sparkles size={28} color="#7c3aed" />
+                <Sparkles size={18} color="#7c3aed" />
               ) : isSandbox ? (
-                <Layers size={28} color="var(--amber-dark)" />
+                <Layers size={18} color="#b45309" />
               ) : isLive ? (
-                <Lock size={28} color="var(--emerald-dark)" />
+                <Lock size={18} color="#059669" />
               ) : (
-                <Database size={28} color="var(--paypal-blue)" />
+                <Database size={18} color="var(--paypal-blue)" />
               )}
             </div>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
-                <span style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--navy-slate)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--navy-slate)' }}>
                   {isDemo ? 'Demo Stream Engine' : 'PayPal Stream Engine'}
                 </span>
                 <span style={{
-                  fontSize: '0.85rem',
+                  fontSize: '0.72rem',
                   fontWeight: 700,
-                  padding: '0.25rem 0.75rem',
+                  padding: '0.15rem 0.55rem',
                   borderRadius: '9999px',
-                  background: isDemo ? '#ede9fe' : isSandbox ? '#fef3c7' : isLive ? '#dcfce7' : 'var(--paypal-blue-subtle)',
-                  color: isDemo ? '#6d28d9' : isSandbox ? 'var(--amber-dark)' : isLive ? 'var(--emerald-dark)' : 'var(--navy-primary)',
-                  border: `1px solid ${isDemo ? '#c4b5fd' : isSandbox ? '#fde68a' : isLive ? '#86efac' : '#bae6fd'}`
+                  background: isDemo ? '#ede9fe' : isSandbox ? '#fef3c7' : isLive ? '#dcfce7' : 'var(--bg-subtle)',
+                  color: isDemo ? '#6d28d9' : isSandbox ? '#92400e' : isLive ? '#065f46' : 'var(--navy-primary)',
+                  border: `1px solid ${isDemo ? '#c4b5fd' : isSandbox ? '#fde68a' : isLive ? '#86efac' : 'var(--border-light)'}`
                 }}>
                   {isDemo ? 'DEMO ENVIRONMENT' : isSandbox ? 'SANDBOX API' : isLive ? 'LIVE RAILS' : 'DEMO STREAM'}
                 </span>
                 {!isDemo && paypalStatus?.configured && (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--emerald-dark)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <ShieldCheck size={16} /> Ready
+                  <span style={{ fontSize: '0.75rem', color: 'var(--emerald-dark)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                    <ShieldCheck size={14} /> Ready
                   </span>
                 )}
                 {isDemo && (
-                  <span style={{ fontSize: '0.8rem', color: '#6d28d9', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <ShieldCheck size={16} /> Isolated Profile
+                  <span style={{ fontSize: '0.75rem', color: '#6d28d9', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                    <ShieldCheck size={14} /> Isolated Profile
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: '1rem', color: 'var(--text-body)', lineHeight: 1.5 }}>
-                {isDemo
-                  ? 'Isolated demonstration environment for DemoTech Solutions. All records are reproducible simulated fixtures.'
-                  : isSandbox
-                  ? 'Connected to PayPal Developer Sandbox via OAuth 2.0 Reporting API'
-                  : isLive
-                  ? 'Connected to PayPal Production REST API'
-                  : 'Demonstration stream with verified SaaS recurring payment signatures'}
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+                {filteredTransactions.length} ledger records ({operatingCount} operating) · {isDemo ? 'Reproducible Dataset' : formatLastSync(business?.last_synced_at)}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Transactions / Last Sync
-              </div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.15rem' }}>
-                {filteredTransactions.length} ledger records ({operatingCount} operating) · {isDemo ? 'Reproducible Dataset' : formatLastSync(business?.last_synced_at)}
-              </div>
-            </div>
-
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
             {isDemo ? (
               <>
                 <button
                   onClick={handleResetDemo}
                   disabled={syncing}
                   className="btn-fintech btn-fintech-primary btn-sm"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', minHeight: '48px', justifyContent: 'center', fontSize: '1rem', background: '#6d28d9', borderColor: '#5b21b6' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '34px', fontSize: '0.82rem', background: '#6d28d9', borderColor: '#5b21b6' }}
                   title="Reset and regenerate 6-month canonical demo dataset"
                 >
-                  <RefreshCw size={17} className={syncing ? 'spin-icon' : ''} />
-                  <span>{syncing ? 'Resetting...' : 'Reset Demo Data'}</span>
+                  <RefreshCw size={14} className={syncing ? 'spin' : ''} />
+                  <span>{syncing ? 'Resetting...' : 'Reset Demo'}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleToggleMode('sandbox')}
                   disabled={syncing}
                   className="btn-fintech btn-fintech-outline btn-sm"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', minHeight: '48px', fontSize: '1rem' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '34px', fontSize: '0.82rem' }}
                 >
-                  <span>Switch to Sandbox</span>
+                  <span>To Sandbox</span>
                 </button>
               </>
             ) : (
@@ -685,10 +666,10 @@ const DashboardPage = () => {
                   onClick={handleSync}
                   disabled={syncing}
                   className="btn-fintech btn-fintech-primary btn-sm"
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.55rem', minWidth: '160px', minHeight: '48px', justifyContent: 'center', fontSize: '1rem' }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', minHeight: '34px', fontSize: '0.82rem' }}
                 >
-                  <RefreshCw size={17} className={syncing ? 'spin-icon' : ''} />
-                  <span>{syncing ? 'Synchronizing...' : 'Sync Stream'}</span>
+                  <RefreshCw size={14} className={syncing ? 'spin' : ''} />
+                  <span>{syncing ? 'Syncing...' : 'Sync Stream'}</span>
                 </button>
 
                 {isSandbox && (
@@ -700,21 +681,17 @@ const DashboardPage = () => {
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.55rem',
-                      minHeight: '48px',
-                      justifyContent: 'center',
-                      fontSize: '1rem',
-                      borderColor: '#f59e0b',
-                      color: '#b45309',
+                      gap: '0.45rem',
+                      minHeight: '34px',
+                      fontSize: '0.82rem',
+                      borderColor: '#fde68a',
+                      color: '#92400e',
                       background: '#fffbeb',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      position: 'relative',
-                      zIndex: 5
+                      fontWeight: 600,
                     }}
                   >
-                    <CreditCard size={18} color="#b45309" />
-                    <span>Test Sandbox Payment ($5.00)</span>
+                    <CreditCard size={14} color="#b45309" />
+                    <span>Test Checkout ($5)</span>
                   </button>
                 )}
 
@@ -722,46 +699,43 @@ const DashboardPage = () => {
                   type="button"
                   onClick={() => handleToggleMode('demo')}
                   disabled={syncing}
+                  className="btn-fintech btn-fintech-outline btn-sm"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.55rem',
-                    minHeight: '48px',
-                    padding: '0 1.25rem',
-                    borderRadius: 'var(--radius-md)',
-                    background: '#ede9fe',
-                    color: '#6d28d9',
-                    border: '1.5px solid #c4b5fd',
-                    fontWeight: 700,
-                    fontSize: '1rem',
-                    cursor: 'pointer'
+                    gap: '0.45rem',
+                    minHeight: '34px',
+                    fontSize: '0.82rem',
+                    background: '#faf5ff',
+                    color: '#7c3aed',
+                    borderColor: '#ddd6fe',
+                    fontWeight: 600,
                   }}
                   title="Switch to DemoTech Solutions 6-month historical dataset"
                 >
-                  <Sparkles size={18} color="#7c3aed" />
-                  <span>Switch to Demo</span>
+                  <Sparkles size={14} color="#7c3aed" />
+                  <span>Demo Mode</span>
                 </button>
               </>
             )}
-
           </div>
         </div>
 
         {/* Sync Status Banner */}
         {syncStatus && (
           <div style={{
-            marginTop: '1.25rem',
-            padding: '0.95rem 1.35rem',
+            marginTop: '0.75rem',
+            padding: '0.65rem 1rem',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '1rem',
+            fontSize: '0.85rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.75rem',
+            gap: '0.55rem',
             background: syncStatus.type === 'success' ? '#dcfce7' : '#fee2e2',
             color: syncStatus.type === 'success' ? 'var(--emerald-dark)' : 'var(--rose-dark)',
-            border: `1.5px solid ${syncStatus.type === 'success' ? '#bbf7d0' : '#fecaca'}`
+            border: `1px solid ${syncStatus.type === 'success' ? '#bbf7d0' : '#fecaca'}`
           }}>
-            {syncStatus.type === 'success' ? <CheckCircle2 size={20} /> : <AlertTriangle size={20} />}
+            {syncStatus.type === 'success' ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
             <span>{syncStatus.text}</span>
           </div>
         )}
@@ -770,43 +744,43 @@ const DashboardPage = () => {
       {/* Empty State Banner if 0 transactions */}
       {!hasTransactions && !loadingData && (
         <div className="fintech-card" style={{
-          padding: '2.5rem 2rem',
+          padding: '2rem 1.5rem',
           textAlign: 'center',
           background: 'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',
           border: '1.5px dashed var(--border-medium)',
           borderRadius: 'var(--radius-lg)'
         }}>
           <div style={{
-            width: '64px',
-            height: '64px',
+            width: '48px',
+            height: '48px',
             borderRadius: '50%',
             background: 'var(--paypal-blue-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1.25rem'
+            margin: '0 auto 1rem'
           }}>
-            <Database size={32} color="var(--paypal-blue)" />
+            <Database size={24} color="var(--paypal-blue)" />
           </div>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--navy-slate)', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--navy-slate)', marginBottom: '0.35rem' }}>
             No PayPal Transactions Found
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '1.05rem', maxWidth: '580px', margin: '0 auto 1.5rem', lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', maxWidth: '520px', margin: '0 auto 1.25rem', lineHeight: 1.5 }}>
             Your account has not synchronized any transactions yet. Click <strong>Sync Stream</strong> above to query your PayPal Sandbox account, or configure your Developer credentials in PayPal Setup.
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
             <button
               onClick={handleSync}
               disabled={syncing}
-              className="btn-fintech btn-fintech-primary"
-              style={{ minHeight: '48px', padding: '0.75rem 1.75rem' }}
+              className="btn-fintech btn-fintech-primary btn-sm"
+              style={{ minHeight: '36px', padding: '0.5rem 1.25rem' }}
             >
               Sync PayPal Sandbox
             </button>
             <button
               onClick={() => setModalOpen(true)}
-              className="btn-fintech btn-fintech-outline"
-              style={{ minHeight: '48px', padding: '0.75rem 1.75rem' }}
+              className="btn-fintech btn-fintech-outline btn-sm"
+              style={{ minHeight: '36px', padding: '0.5rem 1.25rem' }}
             >
               Configure Credentials
             </button>
@@ -814,35 +788,8 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* KPI Grid — 4 stat cards */}
+      {/* KPI Grid — 4 stat cards with Primary Hero Card */}
       <div className="stat-grid">
-        <StatCard
-          title="Total Monthly Income"
-          value={`$${monthlyIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={
-            fundingInflows > 0 && monthlyIncome === 0
-              ? `$${fundingInflows.toLocaleString(undefined, { minimumFractionDigits: 2 })} funding excluded`
-              : hasTransactions && monthlyIncome > 0
-                ? "Current verified operating sales"
-                : "No operating revenue recorded"
-          }
-          icon={TrendingUp}
-          isPositiveGood={true}
-        />
-        <StatCard
-          title="Total Monthly Expenses"
-          value={`$${monthlyExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={monthlyExpenses > 0 ? "Operating cash outflows" : "No operating expenses recorded"}
-          icon={TrendingDown}
-          isPositiveGood={false}
-        />
-        <StatCard
-          title="Subscription Expenses"
-          value={`$${totalSubSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          subtext={activeSubsCount > 0 ? `${activeSubsCount} active recurring commitments` : "0 recurring commitments detected"}
-          icon={CreditCard}
-          isPositiveGood={false}
-        />
         <StatCard
           title="Available Cash Balance"
           value={
@@ -857,47 +804,75 @@ const DashboardPage = () => {
           }
           icon={Wallet}
           isPositiveGood={true}
+          hero={true}
+        />
+        <StatCard
+          title="Total Monthly Income"
+          value={`$${monthlyIncome.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          subtext={
+            fundingInflows > 0 && monthlyIncome === 0
+              ? `$${fundingInflows.toLocaleString(undefined, { minimumFractionDigits: 2 })} funding excluded`
+              : hasTransactions && monthlyIncome > 0
+                ? "Current operating sales"
+                : "No operating revenue"
+          }
+          icon={TrendingUp}
+          isPositiveGood={true}
+        />
+        <StatCard
+          title="Total Monthly Expenses"
+          value={`$${monthlyExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          subtext={monthlyExpenses > 0 ? "Operating cash outflows" : "No operating expenses"}
+          icon={TrendingDown}
+          isPositiveGood={false}
+        />
+        <StatCard
+          title="Subscription Expenses"
+          value={`$${totalSubSpend.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+          subtext={activeSubsCount > 0 ? `${activeSubsCount} recurring commitments` : "0 recurring commitments"}
+          icon={CreditCard}
+          isPositiveGood={false}
         />
       </div>
 
-      {/* Financial Health Indicator + Savings Opportunity */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+      {/* Financial Health Indicator + Savings Opportunity + Upcoming Commitments */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
         {/* Health Score */}
         <div className="fintech-card" style={{
           border: `1px solid ${healthData.border}`,
           background: healthData.bg,
-          padding: '1.5rem',
+          padding: '1.25rem',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: healthData.color, marginBottom: '0.5rem' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: healthData.color, marginBottom: '0.35rem' }}>
                 Financial Health Score
               </div>
-              <div style={{ fontSize: '3rem', fontWeight: 800, color: healthData.color, lineHeight: 1 }}>
+              <div style={{ fontSize: '2.5rem', fontWeight: 800, color: healthData.color, lineHeight: 1 }}>
                 {healthData.displayText}
                 {healthData.score !== null && (
-                  <span style={{ fontSize: '1.2rem', fontWeight: 500, marginLeft: '0.2rem' }}>/100</span>
+                  <span style={{ fontSize: '1.1rem', fontWeight: 500, marginLeft: '0.2rem' }}>/100</span>
                 )}
               </div>
-              <div style={{ fontSize: '0.875rem', fontWeight: 600, color: healthData.color, marginTop: '0.5rem' }}>
+              <div style={{ fontSize: '0.82rem', fontWeight: 600, color: healthData.color, marginTop: '0.4rem' }}>
                 {healthData.label}
               </div>
             </div>
             <div style={{
-              width: '52px',
-              height: '52px',
+              width: '42px',
+              height: '42px',
               borderRadius: '50%',
               background: healthData.border,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Activity size={26} color={healthData.color} />
+              <Activity size={20} color={healthData.color} />
             </div>
           </div>
           {/* Score bar */}
-          <div style={{ marginTop: '1.25rem' }}>
-            <div style={{ height: '8px', background: 'rgba(0,0,0,0.08)', borderRadius: '99px', overflow: 'hidden' }}>
+          <div style={{ marginTop: '1rem' }}>
+            <div style={{ height: '6px', background: 'rgba(0,0,0,0.08)', borderRadius: '99px', overflow: 'hidden' }}>
               <div style={{
                 height: '100%',
                 width: healthData.barWidth,
@@ -906,7 +881,7 @@ const DashboardPage = () => {
                 transition: 'width 1s ease',
               }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: healthData.color, marginTop: '0.4rem', opacity: 0.75 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: healthData.color, marginTop: '0.35rem', opacity: 0.8 }}>
               <span>{healthData.subtext}</span>
               {healthData.score !== null && <span>Optimal (100)</span>}
             </div>
@@ -914,28 +889,28 @@ const DashboardPage = () => {
         </div>
 
         {/* Savings Opportunity */}
-        <div className="fintech-card" style={{ padding: '1.5rem', border: '1px solid var(--amber-border)', background: 'var(--amber-bg)' }}>
-          <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--amber-dark)', marginBottom: '0.5rem' }}>
+        <div className="fintech-card" style={{ padding: '1.25rem', border: '1px solid var(--amber-border)', background: 'var(--amber-bg)' }}>
+          <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--amber-dark)', marginBottom: '0.35rem' }}>
             Identified Savings Opportunity
           </div>
-          <div style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--amber-dark)', lineHeight: 1 }}>
+          <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--amber-dark)', lineHeight: 1 }}>
             ${potentialSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            <span style={{ fontSize: '1rem', fontWeight: 500, marginLeft: '0.3rem' }}>/month</span>
+            <span style={{ fontSize: '0.85rem', fontWeight: 500, marginLeft: '0.25rem' }}>/mo</span>
           </div>
-          <div style={{ fontSize: '0.875rem', color: 'var(--amber-dark)', marginTop: '0.4rem' }}>
+          <div style={{ fontSize: '0.8rem', color: 'var(--amber-dark)', marginTop: '0.35rem' }}>
             ${potentialAnnualSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} potential annual savings
           </div>
-          <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {recommendations.length > 0 ? (
-              recommendations.slice(0, 3).map((r) => (
-                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: 'var(--amber-dark)' }}>
-                  <AlertTriangle size={14} />
-                  <span>{r.title}</span>
+              recommendations.slice(0, 2).map((r) => (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.8rem', color: 'var(--amber-dark)' }}>
+                  <AlertTriangle size={13} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.title}</span>
                 </div>
               ))
             ) : (
-              <div style={{ fontSize: '0.85rem', color: 'var(--amber-dark)', opacity: 0.9 }}>
-                {hasTransactions ? 'All recurring commitments are within normal parameters.' : 'Synchronize transactions to analyze SaaS spend optimization.'}
+              <div style={{ fontSize: '0.8rem', color: 'var(--amber-dark)', opacity: 0.9 }}>
+                {hasTransactions ? 'All recurring commitments within normal parameters.' : 'Synchronize transactions to analyze spend.'}
               </div>
             )}
           </div>
@@ -944,52 +919,52 @@ const DashboardPage = () => {
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.4rem',
-              marginTop: '1rem',
-              fontSize: '0.85rem',
+              gap: '0.35rem',
+              marginTop: '0.75rem',
+              fontSize: '0.8rem',
               fontWeight: 700,
               color: 'var(--amber-dark)',
               textDecoration: 'none',
             }}
           >
-            View all recommendations <ArrowRight size={14} />
+            View recommendations <ArrowRight size={13} />
           </Link>
         </div>
 
         {/* Upcoming Subscriptions */}
-        <div className="fintech-card" style={{ padding: '1.5rem', gridColumn: 'span 1' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div className="fintech-card" style={{ padding: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
             <div>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)' }}>
                 Upcoming Commitments (7 days)
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.2rem' }}>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.15rem' }}>
                 ${upcomingTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
             </div>
-            <Calendar size={22} color="var(--paypal-blue)" />
+            <Calendar size={18} color="var(--paypal-blue)" />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
             {upcomingPayments.length > 0 ? (
-              upcomingPayments.map((p) => (
+              upcomingPayments.slice(0, 3).map((p) => (
                 <div key={p.id} style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '0.5rem 0',
+                  padding: '0.35rem 0',
                   borderBottom: '1px solid var(--border-light)',
-                  fontSize: '0.88rem',
+                  fontSize: '0.82rem',
                 }}>
                   <div>
                     <div style={{ fontWeight: 600, color: 'var(--text-body)' }}>{p.name}</div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-caption)' }}>{p.date}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-caption)' }}>{p.date}</div>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ fontWeight: 700, color: 'var(--navy-slate)' }}>${Number(p.amount).toFixed(2)}</span>
                     {!p.isEssential && (
                       <span style={{
-                        fontSize: '0.7rem',
-                        padding: '0.15rem 0.4rem',
+                        fontSize: '0.65rem',
+                        padding: '0.1rem 0.35rem',
                         background: 'var(--amber-bg)',
                         color: 'var(--amber-dark)',
                         borderRadius: '4px',
@@ -1000,7 +975,7 @@ const DashboardPage = () => {
                 </div>
               ))
             ) : (
-              <div style={{ padding: '1rem 0', color: 'var(--text-muted)', fontSize: '0.9rem', textAlign: 'center' }}>
+              <div style={{ padding: '0.75rem 0', color: 'var(--text-muted)', fontSize: '0.82rem', textAlign: 'center' }}>
                 No upcoming subscription renewals detected.
               </div>
             )}
@@ -1010,83 +985,83 @@ const DashboardPage = () => {
 
       {/* Subscription Expense Analysis Summary */}
       {subAnalysis?.has_subscriptions && (
-        <div className="fintech-card" style={{ padding: '1.75rem 2rem', background: 'var(--bg-surface)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div className="fintech-card" style={{ padding: '1.35rem 1.5rem', background: 'var(--bg-surface)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--navy-slate)', margin: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: 'var(--navy-slate)', margin: 0 }}>
                   Subscription Expense Analysis
                 </h3>
-                <span style={{ fontSize: '0.78rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '4px', background: 'var(--paypal-blue-subtle)', color: 'var(--navy-primary)' }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', background: 'var(--paypal-blue-subtle)', color: 'var(--navy-primary)' }}>
                   {subAnalysis.vendor_analysis?.length || 0} Providers
                 </span>
               </div>
-              <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
                 Normalized recurring commitments, cadence conversion, and revenue impact analysis
               </p>
             </div>
             <Link
               to="/subscriptions"
-              style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--navy-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+              style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--navy-primary)', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
             >
-              Full Analysis Directory <ArrowRight size={15} />
+              Full Directory <ArrowRight size={14} />
             </Link>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
             {/* Monthly Commitment */}
-            <div style={{ padding: '1.15rem 1.35rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+            <div style={{ padding: '0.95rem 1.15rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                 Monthly Commitment
               </div>
-              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.25rem' }}>
                 ${Number(subAnalysis.total_monthly_commitment).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>/mo</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-muted)' }}>/mo</span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                 ${subAnalysis.confirmed_monthly_commitment.toFixed(2)} confirmed · ${subAnalysis.potential_monthly_commitment.toFixed(2)} potential
               </div>
             </div>
 
             {/* Annual Commitment */}
-            <div style={{ padding: '1.15rem 1.35rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Estimated Annual Run-Rate
+            <div style={{ padding: '0.95rem 1.15rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Annual Run-Rate
               </div>
-              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--navy-slate)', marginTop: '0.25rem' }}>
                 ${Number(subAnalysis.total_annual_commitment).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-muted)' }}>/yr</span>
+                <span style={{ fontSize: '0.78rem', fontWeight: 500, color: 'var(--text-muted)' }}>/yr</span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
-                Historical spend: ${Number(subAnalysis.actual_historical_spend_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} settled
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                Historical: ${Number(subAnalysis.actual_historical_spend_total).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} settled
               </div>
             </div>
 
             {/* Revenue Impact */}
-            <div style={{ padding: '1.15rem 1.35rem', background: subAnalysis.revenue_comparison.has_sufficient_revenue_data ? (subAnalysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-bg)' : subAnalysis.revenue_comparison.burden_level === 'moderate' ? 'var(--amber-bg)' : 'var(--rose-bg)') : 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Revenue vs Subscriptions
+            <div style={{ padding: '0.95rem 1.15rem', background: subAnalysis.revenue_comparison.has_sufficient_revenue_data ? (subAnalysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-bg)' : subAnalysis.revenue_comparison.burden_level === 'moderate' ? 'var(--amber-bg)' : 'var(--rose-bg)') : 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Revenue vs Subs
               </div>
-              <div style={{ fontSize: '1.65rem', fontWeight: 800, color: subAnalysis.revenue_comparison.has_sufficient_revenue_data ? (subAnalysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : subAnalysis.revenue_comparison.burden_level === 'moderate' ? 'var(--amber-dark)' : 'var(--rose-dark)') : 'var(--text-muted)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '1.45rem', fontWeight: 800, color: subAnalysis.revenue_comparison.has_sufficient_revenue_data ? (subAnalysis.revenue_comparison.burden_level === 'healthy' ? 'var(--emerald-dark)' : subAnalysis.revenue_comparison.burden_level === 'moderate' ? 'var(--amber-dark)' : 'var(--rose-dark)') : 'var(--text-muted)', marginTop: '0.25rem' }}>
                 {subAnalysis.revenue_comparison.revenue_percentage !== null ? `${subAnalysis.revenue_comparison.revenue_percentage}%` : 'N/A'}
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, marginLeft: '0.4rem' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, marginLeft: '0.35rem' }}>
                   {subAnalysis.revenue_comparison.has_sufficient_revenue_data ? subAnalysis.revenue_comparison.burden_level.toUpperCase() : 'NO SALES'}
                 </span>
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                 {subAnalysis.revenue_comparison.explanation}
               </div>
             </div>
 
             {/* Spending Trend */}
-            <div style={{ padding: '1.15rem 1.35rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                Spending Velocity &amp; Trend
+            <div style={{ padding: '0.95rem 1.15rem', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                Spending Velocity
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: subAnalysis.spending_trends.trend_direction === 'increasing' ? 'var(--rose-dark)' : 'var(--navy-slate)', marginTop: '0.45rem', textTransform: 'capitalize' }}>
+              <div style={{ fontSize: '1.15rem', fontWeight: 800, color: subAnalysis.spending_trends.trend_direction === 'increasing' ? 'var(--rose-dark)' : 'var(--navy-slate)', marginTop: '0.35rem', textTransform: 'capitalize' }}>
                 {subAnalysis.spending_trends.trend_direction.replace('_', ' ')}
               </div>
-              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.35rem' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                 {subAnalysis.spending_trends.trend_summary}
               </div>
             </div>
@@ -1094,16 +1069,10 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Charts Row 1: Income vs Expenses + Category Pie */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.25rem' }}>
+      {/* Main Charts: Consolidated 2-Column Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
         <IncomeExpenseChart data={monthlyChartData} />
         <CategoryPieChart data={categoryPieData} />
-      </div>
-
-      {/* Charts Row 2: Subscription Spending + Cash Flow Trend */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '1.25rem' }}>
-        <SubscriptionSpendingChart data={monthlyChartData} currentSpend={totalSubSpend} />
-        <CashFlowTrendChart data={monthlyChartData} />
       </div>
 
       <PayPalConnectModal

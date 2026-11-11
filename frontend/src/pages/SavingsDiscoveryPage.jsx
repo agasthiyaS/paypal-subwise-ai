@@ -317,42 +317,42 @@ const SavingsDiscoveryPage = () => {
   const rankedOps = opportunities?.ranked_opportunities || [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.35rem' }}>
       {/* ── Page Header ─────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-            background: '#ecfdf5', color: '#059669', padding: '0.3rem 0.8rem',
-            borderRadius: '9999px', fontSize: '0.8rem', fontWeight: 700, marginBottom: '0.5rem',
+            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+            background: '#ecfdf5', color: '#059669', padding: '0.2rem 0.6rem',
+            borderRadius: '9999px', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.35rem',
           }}>
-            <Sparkles size={13} /> Smart Savings Discovery
+            <Sparkles size={12} /> Smart Savings Discovery
           </div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--navy-slate)', letterSpacing: '-0.03em', marginBottom: '0.3rem', lineHeight: 1.25 }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--navy-slate)', letterSpacing: '-0.02em', marginBottom: '0.15rem' }}>
             Savings Opportunities
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', margin: 0 }}>
             Economical alternatives to your recurring services, ranked by verified monthly savings potential
           </p>
         </div>
 
         {/* Summary badges */}
         {opportunities && (
-          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', padding: '0.85rem 1.25rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#15803d', marginBottom: '0.15rem', textTransform: 'uppercase' }}>Monthly Potential</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#059669', lineHeight: 1 }}>{fmt(totalMonthlySavings)}</div>
+          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+            <div style={{ background: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', padding: '0.65rem 1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#15803d', marginBottom: '0.1rem', textTransform: 'uppercase' }}>Monthly Potential</div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#059669', lineHeight: 1 }}>{fmt(totalMonthlySavings)}</div>
             </div>
-            <div style={{ background: '#eff6ff', border: '1.5px solid #bfdbfe', borderRadius: '12px', padding: '0.85rem 1.25rem', textAlign: 'center' }}>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#1d4ed8', marginBottom: '0.15rem', textTransform: 'uppercase' }}>Annual Potential</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{fmt(totalAnnualSavings)}</div>
+            <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '0.65rem 1rem', textAlign: 'center' }}>
+              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#1d4ed8', marginBottom: '0.1rem', textTransform: 'uppercase' }}>Annual Potential</div>
+              <div style={{ fontSize: '1.35rem', fontWeight: 800, color: '#1d4ed8', lineHeight: 1 }}>{fmt(totalAnnualSavings)}</div>
             </div>
           </div>
         )}
       </div>
 
       {/* ── Tabs ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
         <TabBtn
           label="Personalized"
           icon={Star}
