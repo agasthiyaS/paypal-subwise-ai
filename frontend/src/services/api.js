@@ -230,12 +230,36 @@ export const recommendationsAPI = {
 };
 
 export const assistantAPI = {
+  chat: async (data) => {
+    const res = await apiClient.post('/assistant/chat', data);
+    return res.data;
+  },
+  getConversations: async () => {
+    const res = await apiClient.get('/assistant/conversations');
+    return res.data;
+  },
+  getConversation: async (id) => {
+    const res = await apiClient.get(`/assistant/conversations/${id}`);
+    return res.data;
+  },
+  renameConversation: async (id, title) => {
+    const res = await apiClient.patch(`/assistant/conversations/${id}`, { title });
+    return res.data;
+  },
+  deleteConversation: async (id) => {
+    const res = await apiClient.delete(`/assistant/conversations/${id}`);
+    return res.data;
+  },
   query: async (data) => {
     const res = await apiClient.post('/assistant/query', data);
     return res.data;
   },
   getSuggestions: async () => {
     const res = await apiClient.get('/assistant/suggestions');
+    return res.data;
+  },
+  getProviderStatus: async () => {
+    const res = await apiClient.get('/assistant/provider-status');
     return res.data;
   },
 };

@@ -9,6 +9,7 @@ from app.models.expense import Expense
 from app.models.budget import Budget
 from app.models.webhook_event import WebhookEvent
 from app.models.vendor import Vendor, VendorPlan
+from app.models.conversation import Conversation, ChatMessage
 
 __all__ = [
     "User",
@@ -23,5 +24,7 @@ __all__ = [
     "WebhookEvent",
     "Vendor",
     "VendorPlan",
+    "Conversation",
+    "ChatMessage",
 ]
 

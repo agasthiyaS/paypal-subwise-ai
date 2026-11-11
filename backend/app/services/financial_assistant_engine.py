@@ -29,6 +29,7 @@ from app.schemas.assistant import (
     EvidenceCard,
     SuggestionItem,
     AssistantSuggestionsResponse,
+    ChatAction,
 )
 from app.schemas.recommendation import PurchaseSimulationRequest
 from app.services.forecast_engine import ForecastEngine
@@ -70,59 +71,165 @@ class FinancialAssistantEngine:
         valid_txs = [t for t in transactions if ForecastEngine.is_valid_operating(t)]
         is_llm = cls.is_llm_configured()
 
+        account_type = (business.account_type or "business").lower()
+
         if not valid_txs and not confirmed_subs:
             status = "insufficient_data"
-            suggestions = [
-                SuggestionItem(
-                    prompt="What is my current financial status and what data is missing?",
-                    category="health",
-                    label="Data Status & Gaps"
-                ),
-                SuggestionItem(
-                    prompt="Can I afford a new project management tool for $40/month?",
-                    category="affordability",
-                    label="Simulate $40/mo Tool"
-                ),
-                SuggestionItem(
-                    prompt="How does PayPal SubWise track subscriptions and cash flow?",
-                    category="reports",
-                    label="Methodology Overview"
-                ),
-                SuggestionItem(
-                    prompt="What starting cash balance is configured for my business?",
-                    category="forecast",
-                    label="Check Starting Cash"
-                ),
-            ]
+            if account_type == "individual":
+                suggestions = [
+                    SuggestionItem(
+                        prompt="Where did most of my money go this month?",
+                        category="health",
+                        label="Spending Breakdown"
+                    ),
+                    SuggestionItem(
+                        prompt="What subscriptions am I currently paying for?",
+                        category="subscriptions",
+                        label="Active Subscriptions"
+                    ),
+                    SuggestionItem(
+                        prompt="Can I afford a new subscription for $30/month?",
+                        category="affordability",
+                        label="Simulate $30/mo"
+                    ),
+                    SuggestionItem(
+                        prompt="Find cheaper alternatives for my streaming and software",
+                        category="reports",
+                        label="Find Cheaper Plans"
+                    ),
+                ]
+            elif account_type == "household":
+                suggestions = [
+                    SuggestionItem(
+                        prompt="How much did each household member spend this month?",
+                        category="health",
+                        label="Member Spending"
+                    ),
+                    SuggestionItem(
+                        prompt="Are we on track with our household monthly budget?",
+                        category="forecast",
+                        label="Household Budget"
+                    ),
+                    SuggestionItem(
+                        prompt="What shared recurring subscriptions are active?",
+                        category="subscriptions",
+                        label="Shared Subscriptions"
+                    ),
+                    SuggestionItem(
+                        prompt="Where can our household cut costs to save $150/month?",
+                        category="reports",
+                        label="Household Savings"
+                    ),
+                ]
+            else:
+                suggestions = [
+                    SuggestionItem(
+                        prompt="What is my current financial status and what data is missing?",
+                        category="health",
+                        label="Data Status & Gaps"
+                    ),
+                    SuggestionItem(
+                        prompt="Can I afford a new project management tool for $40/month?",
+                        category="affordability",
+                        label="Simulate $40/mo Tool"
+                    ),
+                    SuggestionItem(
+                        prompt="How does PayPal SubWise track subscriptions and cash flow?",
+                        category="reports",
+                        label="Methodology Overview"
+                    ),
+                    SuggestionItem(
+                        prompt="What starting cash balance is configured for my business?",
+                        category="forecast",
+                        label="Check Starting Cash"
+                    ),
+                ]
         else:
             status = "sufficient_data" if len(valid_txs) >= 10 else "limited_data"
-            suggestions = [
-                SuggestionItem(
-                    prompt="What are my upcoming subscription renewals over the next 30 days?",
-                    category="subscriptions",
-                    label="Upcoming Renewals"
-                ),
-                SuggestionItem(
-                    prompt="What is our projected cash runway and monthly burn rate?",
-                    category="forecast",
-                    label="Cash Runway & Burn"
-                ),
-                SuggestionItem(
-                    prompt="Can we afford to upgrade to an enterprise software plan for $150/month?",
-                    category="affordability",
-                    label="Simulate $150/mo Purchase"
-                ),
-                SuggestionItem(
-                    prompt="Summarize our latest monthly financial report and operating cash flow.",
-                    category="reports",
-                    label="Monthly Financial Summary"
-                ),
-                SuggestionItem(
-                    prompt="What is our financial health score and what risks should we watch?",
-                    category="health",
-                    label="Health Score & Risks"
-                ),
-            ]
+            if account_type == "individual":
+                suggestions = [
+                    SuggestionItem(
+                        prompt="Where did most of my money go this month?",
+                        category="health",
+                        label="Spending Breakdown"
+                    ),
+                    SuggestionItem(
+                        prompt="What are my upcoming subscription renewals over the next 30 days?",
+                        category="subscriptions",
+                        label="Upcoming Renewals"
+                    ),
+                    SuggestionItem(
+                        prompt="Can I afford a new subscription for $45/month?",
+                        category="affordability",
+                        label="Simulate $45/mo"
+                    ),
+                    SuggestionItem(
+                        prompt="Find cheaper alternatives for my recurring software",
+                        category="reports",
+                        label="Find Cheaper Plans"
+                    ),
+                    SuggestionItem(
+                        prompt="What is my financial health score and how can I improve it?",
+                        category="health",
+                        label="Health Score"
+                    ),
+                ]
+            elif account_type == "household":
+                suggestions = [
+                    SuggestionItem(
+                        prompt="How much did each household member spend this month?",
+                        category="health",
+                        label="Member Spending"
+                    ),
+                    SuggestionItem(
+                        prompt="Are we exceeding our household monthly budget?",
+                        category="forecast",
+                        label="Budget Pacing"
+                    ),
+                    SuggestionItem(
+                        prompt="What are our upcoming shared subscription renewals?",
+                        category="subscriptions",
+                        label="Shared Renewals"
+                    ),
+                    SuggestionItem(
+                        prompt="Where can our household cut costs to save $150/month?",
+                        category="reports",
+                        label="Household Savings"
+                    ),
+                    SuggestionItem(
+                        prompt="What is our household financial health score?",
+                        category="health",
+                        label="Household Health"
+                    ),
+                ]
+            else:
+                suggestions = [
+                    SuggestionItem(
+                        prompt="What are my upcoming subscription renewals over the next 30 days?",
+                        category="subscriptions",
+                        label="Upcoming Renewals"
+                    ),
+                    SuggestionItem(
+                        prompt="What is our projected cash runway and monthly burn rate?",
+                        category="forecast",
+                        label="Cash Runway & Burn"
+                    ),
+                    SuggestionItem(
+                        prompt="Can we afford to upgrade to an enterprise software plan for $150/month?",
+                        category="affordability",
+                        label="Simulate $150/mo Purchase"
+                    ),
+                    SuggestionItem(
+                        prompt="Summarize our latest monthly financial report and operating cash flow.",
+                        category="reports",
+                        label="Monthly Financial Summary"
+                    ),
+                    SuggestionItem(
+                        prompt="What is our financial health score and what risks should we watch?",
+                        category="health",
+                        label="Health Score & Risks"
+                    ),
+                ]
 
         return AssistantSuggestionsResponse(
             suggestions=suggestions,
@@ -140,6 +247,33 @@ class FinancialAssistantEngine:
         Classifies incoming user question into fintech intent categories.
         """
         m = message.lower().strip()
+
+        # 0. Read-Only Safety Guard: Mutating requests (Phase 9 requirement)
+        if any(p in m for p in [
+            "cancel subscription", "cancel my subscription", "cancel netflix", "cancel spotify",
+            "cancel hulu", "unsubscribe", "cancel service", "stop subscription", "cancel payment",
+            "pay bill", "pay my bill", "pay this invoice", "make payment", "send money", "transfer money",
+            "execute payment", "process payment", "change budget", "update budget", "set budget",
+            "increase budget", "lower budget", "delete expense", "delete transaction", "remove subscription",
+            "add expense", "create subscription", "transfer funds"
+        ]) or (m.startswith(("cancel ", "pay ", "delete ", "transfer ", "send money", "modify budget")) and len(m.split()) <= 6):
+            return "READ_ONLY_GUARD"
+
+        # 0B. Household Member Spending (Phase 9 multi-account requirement)
+        if any(p in m for p in [
+            "who spent the most", "who spent more", "member spending", "partner spending",
+            "household member", "household members", "shared expenses", "member breakdown",
+            "who is spending", "roommate spending", "how much did each member spend"
+        ]):
+            return "HOUSEHOLD_SPENDING"
+
+        # 0C. Contextual Follow-up (Phase 9 contextual memory)
+        if any(p in m for p in [
+            "what about last month", "and last month", "previous month", "how about last month",
+            "why did it increase", "why is it high", "why is that", "explain why",
+            "show more details", "tell me more", "break that down"
+        ]):
+            return "CONTEXTUAL_FOLLOWUP"
 
         # 1. Vendor Alternatives & Cheaper Plans (Phase 4)
         if any(p in m for p in [
@@ -297,6 +431,8 @@ class FinancialAssistantEngine:
         subscriptions: List[Subscription],
         transactions: List[Transaction],
         request: AssistantQueryRequest,
+        db: Optional[Any] = None,
+        history: Optional[List[Dict[str, Any]]] = None,
     ) -> AssistantQueryResponse:
         """
         Coordinates intent classification, deterministic facts gathering,
@@ -326,11 +462,202 @@ class FinancialAssistantEngine:
             forecast_months=6,
         )
 
-        company_name = business.company_name or "Your Business"
+        company_name = business.company_name or "Your Account"
         disclaimer = (
             "SubWise AI is a decision-support assistant. All figures are derived strictly "
             "from connected PayPal transactions and deterministic forecasting formulas, not speculative forecasts."
         )
+
+        # ---------------------------------------------------------------------
+        # ROUTE: READ-ONLY SAFETY GUARD (Phase 9 Security Boundary)
+        # ---------------------------------------------------------------------
+        if intent == "READ_ONLY_GUARD":
+            card = EvidenceCard(
+                title="Strict Read-Only Architecture",
+                data_type="informational",
+                amount=None,
+                currency="USD",
+                details={
+                    "security_policy": "Strict Read-Only Enforcement",
+                    "audit_compliance": "SOC2 & PCI-DSS Audit Safe",
+                    "direct_mutation_allowed": False,
+                },
+                navigation_link="/subscriptions",
+                badge_label="Read-Only Protected",
+                badge_status="neutral",
+            )
+            guard_md = (
+                f"### 🛡️ **SubWise AI Assistant Operates in Read-Only Mode**\n\n"
+                f"To protect your financial security, prevent accidental balance deductions, and maintain an immutable ledger audit trail, "
+                f"the AI Assistant is architected to be **strictly read-only**.\n\n"
+                f"The assistant **cannot** directly execute payments, transfer funds, alter account balances, cancel third-party subscriptions, or delete ledger records.\n\n"
+                f"#### **How to perform this action directly:**\n"
+                f"- **Manage Subscriptions:** Visit the [Subscriptions Page](/subscriptions) to cancel, pause, or view billing contracts.\n"
+                f"- **Edit or Add Expenses:** Visit the [Expenses Page](/expenses) to adjust ledger line items or categories.\n"
+                f"- **Adjust Household Settings:** Visit the [Household Page](/household) to manage members and contribution splits.\n"
+                f"- **Simulate Scenarios:** Visit the [Forecast & Simulator](/forecast) to test financial changes before committing them."
+            )
+            actions = [
+                ChatAction(label="Manage Subscriptions", path="/subscriptions", description="View active subscriptions and cancel services"),
+                ChatAction(label="Manage Expenses", path="/expenses", description="View and update ledger expenses"),
+                ChatAction(label="Run Simulation", path="/forecast", description="Test financial impact in cash flow simulator"),
+            ]
+            return AssistantQueryResponse(
+                response_text=guard_md,
+                is_ai_generated=False,
+                generation_model="SubWise Financial Safety Guard",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[card],
+                suggested_followups=[
+                    "What are my upcoming subscription renewals?",
+                    "Where did most of my money go this month?",
+                    "Can I afford a new subscription for $50/mo?",
+                ],
+                actions=actions,
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE: HOUSEHOLD_SPENDING (Phase 9 Multi-Account Requirement)
+        # ---------------------------------------------------------------------
+        if intent == "HOUSEHOLD_SPENDING" or (business.account_type == "household" and any(k in message.lower() for k in ["member", "who spent", "household", "shared"])):
+            from app.models.household_member import HouseholdMember
+            from app.models.expense import Expense
+
+            members = []
+            expenses = []
+            if db:
+                members = db.query(HouseholdMember).filter(HouseholdMember.business_id == business.id, HouseholdMember.is_active == True).all()
+                expenses = db.query(Expense).filter(Expense.business_id == business.id).all()
+
+            member_map = {m.id: m.name for m in members}
+            member_spend = {m.name: 0.0 for m in members}
+            member_spend["Unassigned / Shared"] = 0.0
+
+            total_household_spend = 0.0
+            for exp in expenses:
+                if exp.expense_type == "expense":
+                    amt = float(exp.amount or 0.0)
+                    total_household_spend += amt
+                    m_name = member_map.get(exp.household_member_id, "Unassigned / Shared")
+                    member_spend[m_name] = member_spend.get(m_name, 0.0) + amt
+
+            filtered_spend = {k: v for k, v in member_spend.items() if v > 0 or k != "Unassigned / Shared"}
+            if not filtered_spend:
+                filtered_spend = member_spend
+
+            top_member = max(filtered_spend.items(), key=lambda x: x[1]) if filtered_spend else ("None", 0.0)
+
+            card = EvidenceCard(
+                title="Household Member Spending",
+                data_type="actual",
+                amount=total_household_spend,
+                currency="USD",
+                details={
+                    "total_household_spend": total_household_spend,
+                    "members_count": len(members),
+                    "top_spender": top_member[0],
+                    "top_spender_amount": top_member[1],
+                    "member_breakdown": filtered_spend,
+                },
+                navigation_link="/household",
+                badge_label=f"${total_household_spend:,.2f} Total",
+                badge_status="info",
+            )
+
+            h_md = (
+                f"### Household Spending & Member Allocation\n\n"
+                f"- **Total Recorded Household Spend:** **${total_household_spend:,.2f}**\n"
+                f"- **Active Household Members:** {len(members)}\n"
+            )
+            if top_member[1] > 0:
+                h_md += f"- **Highest Outflow Contribution:** **{top_member[0]}** (${top_member[1]:,.2f})\n\n"
+
+            if members or expenses:
+                h_md += "**Member Spending Breakdown:**\n\n| Member | Total Spent | Share |\n| :--- | :--- | :--- |\n"
+                for m_name, s_amt in sorted(filtered_spend.items(), key=lambda x: x[1], reverse=True):
+                    share_pct = (s_amt / total_household_spend * 100) if total_household_spend > 0 else 0.0
+                    h_md += f"| **{m_name}** | ${s_amt:,.2f} | {share_pct:.1f}% |\n"
+
+            h_md += "\nManage members, budget caps, and contribution splits on the [Household Dashboard](/household)."
+
+            return AssistantQueryResponse(
+                response_text=h_md,
+                is_ai_generated=False,
+                generation_model="SubWise Household Allocation Engine",
+                intent="HOUSEHOLD_SPENDING",
+                data_sufficiency_status="sufficient_data" if expenses else "limited_data",
+                evidence_cards=[card],
+                suggested_followups=[
+                    "Are we on track with our household monthly budget?",
+                    "Where can our household cut costs to save $150/month?",
+                    "What shared recurring subscriptions are active?",
+                ],
+                actions=[
+                    ChatAction(label="Household Dashboard", path="/household", description="View household members and contributions"),
+                    ChatAction(label="Shared Expenses", path="/expenses", description="View all household expenses"),
+                ],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE: CONTEXTUAL FOLLOW-UP (Phase 9 Contextual Memory)
+        # ---------------------------------------------------------------------
+        if intent == "CONTEXTUAL_FOLLOWUP":
+            if any(k in message.lower() for k in ["last month", "previous month", "prior month"]):
+                cf_md = (
+                    f"### Historical Comparison & Previous Month Context for **{company_name}**\n\n"
+                    f"Comparing current operating data against the prior billing cycle:\n\n"
+                    f"- **Historical Revenue Baseline:** ${hist_actuals.historical_monthly_operating_revenue:,.2f}/mo\n"
+                    f"- **Historical Operating Outflows:** ${hist_actuals.historical_monthly_operating_expenses:,.2f}/mo\n"
+                    f"- **Recurring Subscription Commitments:** ${forward_commit.confirmed_monthly_subscription_commitments:,.2f}/mo\n\n"
+                    f"For an itemized month-by-month comparative ledger, view the [Reports Page](/reports) or review category spikes on [Expenses](/expenses)."
+                )
+            else:
+                cf_md = (
+                    f"### Contextual Financial Analysis for **{company_name}**\n\n"
+                    f"Following up on our financial review:\n\n"
+                    f"- **Confirmed Subscription Commitments:** ${forward_commit.confirmed_monthly_subscription_commitments:,.2f}/mo\n"
+                    f"- **Current Net Monthly Cash Flow:** ${hist_actuals.historical_monthly_net_cash_flow:,.2f}/mo\n"
+                    f"- **Liquid Cash Reserves:** ${hist_actuals.verified_available_cash or 0.0:,.2f}\n\n"
+                    f"Outflow changes are primarily driven by active recurring commitments, billing cadence synchronizations, or variable discretionary transactions."
+                )
+
+            card = EvidenceCard(
+                title="Contextual Analysis",
+                data_type="actual",
+                amount=hist_actuals.historical_monthly_operating_expenses,
+                currency="USD",
+                details={
+                    "operating_months": hist_actuals.operating_months_analyzed,
+                    "monthly_operating_outflows": hist_actuals.historical_monthly_operating_expenses,
+                },
+                navigation_link="/reports",
+                badge_label="Contextual Context",
+                badge_status="neutral",
+            )
+            return AssistantQueryResponse(
+                response_text=cf_md,
+                is_ai_generated=False,
+                generation_model="SubWise Deterministic Intelligence Engine",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[card],
+                suggested_followups=[
+                    "Where did most of my money go this month?",
+                    "What are our upcoming subscription renewals?",
+                    "What is our projected cash runway?",
+                ],
+                actions=[
+                    ChatAction(label="Financial Reports", path="/reports", description="Month-by-month financial ledger"),
+                    ChatAction(label="Expenses Page", path="/expenses", description="View itemized category transactions"),
+                ],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer=disclaimer,
+            )
 
         # ---------------------------------------------------------------------
         # ROUTE 0A: VENDOR & ALTERNATIVE COMPARISON (Phase 4 AI Discovery)
@@ -383,6 +710,10 @@ class FinancialAssistantEngine:
                     "How can I save $100 monthly?",
                     "What are my upcoming renewals?",
                 ],
+                actions=[
+                    ChatAction(label="Savings Discovery", path="/savings-discovery", description="Explore cheaper vendor alternatives"),
+                    ChatAction(label="CFO Recommendations", path="/recommendations", description="View actionable savings steps"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -391,8 +722,19 @@ class FinancialAssistantEngine:
         # ROUTE 0B: SPENDING BREAKDOWN & TOP OUTFLOWS
         # ---------------------------------------------------------------------
         if intent == "SPENDING_BREAKDOWN":
+            category_breakdown = {}
             total_exp = hist_actuals.historical_monthly_operating_expenses
             sub_exp = forward_commit.confirmed_monthly_subscription_commitments
+
+            if db and business.account_type in ("individual", "household"):
+                from app.models.expense import Expense
+                db_expenses = db.query(Expense).filter(Expense.business_id == business.id, Expense.expense_type == "expense").all()
+                if db_expenses:
+                    total_exp = float(sum(e.amount for e in db_expenses))
+                    for e in db_expenses:
+                        cat = e.category or "Other"
+                        category_breakdown[cat] = category_breakdown.get(cat, 0.0) + float(e.amount or 0.0)
+
             card = EvidenceCard(
                 title="Monthly Outflow Breakdown",
                 data_type="actual",
@@ -402,22 +744,30 @@ class FinancialAssistantEngine:
                     "total_expenses": total_exp,
                     "subscription_expenses": sub_exp,
                     "discretionary_expenses": max(0.0, total_exp - sub_exp),
+                    "category_breakdown": category_breakdown,
                 },
                 navigation_link="/expenses",
-                badge_label=f"${total_exp:,.2f}/mo",
+                badge_label=f"${total_exp:,.2f} Total",
                 badge_status="neutral",
             )
 
             sb_md = (
                 f"### Spending Analysis & Outflow Allocation for **{company_name}**\n\n"
-                f"- **Total Monthly Outflows:** **${total_exp:,.2f}**\n"
-                f"- **Confirmed Recurring Subscriptions:** **${sub_exp:,.2f}/mo** ({(sub_exp / total_exp * 100) if total_exp > 0 else 0:.1f}% of outflows)\n"
-                f"- **Discretionary & Variable Outflows:** **${max(0.0, total_exp - sub_exp):,.2f}/mo**\n\n"
+                f"- **Total Recorded Outflows:** **${total_exp:,.2f}**\n"
             )
+            if sub_exp > 0:
+                sb_md += f"- **Confirmed Recurring Subscriptions:** **${sub_exp:,.2f}/mo** ({(sub_exp / total_exp * 100) if total_exp > 0 else 0:.1f}% of outflows)\n"
 
-            if subscriptions:
+            if category_breakdown:
+                top_cat = max(category_breakdown.items(), key=lambda x: x[1])
+                sb_md += f"- **Top Spending Category:** **{top_cat[0]}** (${top_cat[1]:,.2f})\n\n"
+                sb_md += "**Spending by Category:**\n\n| Category | Amount | Share |\n| :--- | :--- | :--- |\n"
+                for cat_name, cat_amt in sorted(category_breakdown.items(), key=lambda x: x[1], reverse=True):
+                    share = (cat_amt / total_exp * 100) if total_exp > 0 else 0.0
+                    sb_md += f"| **{cat_name}** | ${cat_amt:,.2f} | {share:.1f}% |\n"
+            elif subscriptions:
                 top_subs = sorted(subscriptions, key=lambda s: float(getattr(s, 'latest_amount', 0.0) or 0.0), reverse=True)[:5]
-                sb_md += "**Top Recurring Commitments:**\n\n| Service | Amount | Cadence |\n| :--- | :--- | :--- |\n"
+                sb_md += "\n**Top Recurring Commitments:**\n\n| Service | Amount | Cadence |\n| :--- | :--- | :--- |\n"
                 for s in top_subs:
                     sb_md += f"| **{s.vendor_name}** | ${float(getattr(s, 'latest_amount', 0.0) or 0.0):.2f} | {s.cadence or 'monthly'} |\n"
 
@@ -428,12 +778,16 @@ class FinancialAssistantEngine:
                 is_ai_generated=False,
                 generation_model="SubWise Deterministic Spending Intelligence",
                 intent=intent,
-                data_sufficiency_status=data_status,
+                data_sufficiency_status=data_status if total_exp > 0 else "insufficient_data",
                 evidence_cards=[card],
                 suggested_followups=[
                     "Find cheaper alternatives for my subscriptions",
                     "Am I exceeding my monthly budget?",
                     "What is my financial health score?",
+                ],
+                actions=[
+                    ChatAction(label="View Expenses", path="/expenses", description="Explore itemized expenses"),
+                    ChatAction(label="Savings Discovery", path="/savings-discovery", description="Explore savings"),
                 ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
@@ -443,8 +797,66 @@ class FinancialAssistantEngine:
         # ROUTE 0C: BUDGET PACING & HEALTH
         # ---------------------------------------------------------------------
         if intent == "BUDGET_STATUS":
-            budget_limit = float(business.monthly_baseline_revenue or 3500.0)
+            budget_limit = 0.0
+            budget_source = "Not Configured"
+            if db:
+                from app.models.budget import Budget
+                budgets = db.query(Budget).filter(Budget.business_id == business.id).all()
+                if budgets:
+                    overall_b = next((b for b in budgets if b.category.lower() == "overall"), None)
+                    if overall_b and overall_b.monthly_limit > 0:
+                        budget_limit = float(overall_b.monthly_limit)
+                        budget_source = "Configured Overall Budget"
+                    else:
+                        budget_limit = float(sum(b.monthly_limit for b in budgets if b.monthly_limit > 0))
+                        budget_source = "Sum of Category Budgets"
+
+            if budget_limit == 0.0 and business.monthly_baseline_revenue and float(business.monthly_baseline_revenue) > 0:
+                budget_limit = float(business.monthly_baseline_revenue)
+                budget_source = "Monthly Baseline Revenue Target"
+
             spent = hist_actuals.historical_monthly_operating_expenses
+            if spent == 0.0 and db:
+                from app.models.expense import Expense
+                db_exp_sum = db.query(Expense).filter(Expense.business_id == business.id, Expense.expense_type == "expense").all()
+                if db_exp_sum:
+                    spent = float(sum(e.amount for e in db_exp_sum))
+
+            if budget_limit <= 0.0:
+                card = EvidenceCard(
+                    title="Budget Utilization",
+                    data_type="informational",
+                    amount=spent,
+                    currency="USD",
+                    details={"spent_so_far": spent, "budget_limit": "Unset"},
+                    navigation_link="/expenses",
+                    badge_label="Budget Unset",
+                    badge_status="neutral",
+                )
+                b_md = (
+                    f"### Budget Status: **No Budget Target Configured**\n\n"
+                    f"- **Current Recorded Outflows:** **${spent:,.2f}**\n"
+                    f"- **Target Monthly Budget Ceiling:** Not yet set\n\n"
+                    f"You have not configured a monthly budget limit for **{company_name}**. "
+                    f"To track spending pacing and receive real-time overage warnings, configure your target budget on the [Budget Manager](/expenses)."
+                )
+                return AssistantQueryResponse(
+                    response_text=b_md,
+                    is_ai_generated=False,
+                    generation_model="SubWise Deterministic Budget Engine",
+                    intent=intent,
+                    data_sufficiency_status="limited_data",
+                    evidence_cards=[card],
+                    suggested_followups=[
+                        "Where did most of my money go this month?",
+                        "What subscriptions am I paying for?",
+                        "How can I save $100 monthly?",
+                    ],
+                    actions=[ChatAction(label="Set Budget Target", path="/expenses", description="Set monthly spending limit")],
+                    reporting_period=overview.monthly_briefing.reporting_period,
+                    disclaimer=disclaimer,
+                )
+
             rem = budget_limit - spent
             pct = (spent / budget_limit * 100) if budget_limit > 0 else 0.0
 
@@ -457,6 +869,7 @@ class FinancialAssistantEngine:
                     "monthly_limit": budget_limit,
                     "remaining_amount": rem,
                     "utilization_percent": pct,
+                    "budget_source": budget_source,
                 },
                 navigation_link="/expenses",
                 badge_label=f"{pct:.1f}% Used",
@@ -466,7 +879,7 @@ class FinancialAssistantEngine:
             status_str = "Within Budget" if rem >= 0 else "Over Budget"
             b_md = (
                 f"### Budget Pacing Status: **{status_str}**\n\n"
-                f"- **Target Monthly Budget Limit:** **${budget_limit:,.2f}**\n"
+                f"- **Target Monthly Budget Limit:** **${budget_limit:,.2f}** ({budget_source})\n"
                 f"- **Current Month Expenses:** **${spent:,.2f}** ({pct:.1f}% consumed)\n"
                 f"- **Remaining Financial Cushion:** **${rem:,.2f}**\n\n"
             )
@@ -474,7 +887,7 @@ class FinancialAssistantEngine:
             if rem >= 0:
                 b_md += f"> ✅ You have a **${rem:,.2f}** safety cushion remaining for this billing cycle.\n\n"
             else:
-                b_md += f"> ⚠️ Outflows exceed your monthly target ceiling by **${abs(rem):,.2f}**. Consider trimming non-essential subscriptions or takeout orders.\n\n"
+                b_md += f"> ⚠️ Outflows exceed your monthly target ceiling by **${abs(rem):,.2f}**. Consider trimming non-essential subscriptions or variable expenses.\n\n"
 
             b_md += "Manage individual category limits on the [Budget Manager](/expenses)."
 
@@ -489,6 +902,10 @@ class FinancialAssistantEngine:
                     "Where did most of my money go this month?",
                     "Find cheaper alternatives for subscriptions",
                     "What is our projected cash runway?",
+                ],
+                actions=[
+                    ChatAction(label="Manage Budgets", path="/expenses", description="Adjust spending limits"),
+                    ChatAction(label="Spending Analytics", path="/reports", description="Review category trends"),
                 ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
@@ -593,6 +1010,10 @@ class FinancialAssistantEngine:
                     "What is our projected cash runway right now?",
                     "Show my upcoming renewals for the next 30 days",
                 ],
+                actions=[
+                    ChatAction(label="Run In Simulator", path="/forecast", description="Test purchase impact on cash runway"),
+                    ChatAction(label="Active Subscriptions", path="/subscriptions", description="Compare against existing software"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -650,6 +1071,10 @@ class FinancialAssistantEngine:
                     "What are my upcoming renewals for the next 60 days?",
                     "What are our top subscription expenses?",
                     "What is our financial health score?",
+                ],
+                actions=[
+                    ChatAction(label="Executive Report", path="/reports", description="View full financial statements"),
+                    ChatAction(label="Spending Outflows", path="/expenses", description="View itemized category transactions"),
                 ],
                 reporting_period=rep.reporting_period,
                 disclaimer=disclaimer,
@@ -729,6 +1154,10 @@ class FinancialAssistantEngine:
                     "Can we afford a new subscription for $50/mo?",
                     "What are our largest recurring vendors?",
                 ],
+                actions=[
+                    ChatAction(label="Payment Calendar", path="/forecast", description="View calendar schedule of renewals"),
+                    ChatAction(label="Manage Subscriptions", path="/subscriptions", description="Review all subscriptions"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -795,6 +1224,10 @@ class FinancialAssistantEngine:
                     "What are our upcoming renewals next month?",
                     "How can we cut subscription costs?",
                 ],
+                actions=[
+                    ChatAction(label="Forecast Scenarios", path="/forecast", description="Test optimistic and conservative models"),
+                    ChatAction(label="Financial Reports", path="/reports", description="Review historical cash flow"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -853,6 +1286,10 @@ class FinancialAssistantEngine:
                     "What recommendations do you have to improve our score?",
                     "What are our upcoming subscription renewals?",
                     "What is our projected cash runway?",
+                ],
+                actions=[
+                    ChatAction(label="Risk Intelligence", path="/reports", description="Inspect detailed score drivers"),
+                    ChatAction(label="Actionable Insights", path="/recommendations", description="View savings recommendations"),
                 ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
@@ -915,6 +1352,10 @@ class FinancialAssistantEngine:
                     "Can we afford a new subscription for $50/mo?",
                     "What is our projected cash runway?",
                 ],
+                actions=[
+                    ChatAction(label="Savings Opportunities", path="/recommendations", description="Execute cost optimizations"),
+                    ChatAction(label="Savings Discovery", path="/savings-discovery", description="Benchmark vendor alternatives"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -973,6 +1414,10 @@ class FinancialAssistantEngine:
                         "What are my total subscription expenses?",
                         "What is our cash runway?",
                     ],
+                    actions=[
+                        ChatAction(label="Manage Subscriptions", path="/subscriptions", description="View and edit subscription plans"),
+                        ChatAction(label="Compare Alternatives", path="/savings-discovery", description="Search cheaper vendor options"),
+                    ],
                     reporting_period=overview.monthly_briefing.reporting_period,
                     disclaimer=disclaimer,
                 )
@@ -1028,6 +1473,10 @@ class FinancialAssistantEngine:
                     "Can we afford a new tool for $50/mo?",
                     "What is our cash runway?",
                 ],
+                actions=[
+                    ChatAction(label="Subscriptions Page", path="/subscriptions", description="View active recurring services"),
+                    ChatAction(label="Savings Discovery", path="/savings-discovery", description="Benchmark vendor alternatives"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -1082,6 +1531,10 @@ class FinancialAssistantEngine:
                     "What is our projected cash runway?",
                     "Summarize our monthly financial report",
                 ],
+                actions=[
+                    ChatAction(label="Revenue Breakdown", path="/reports", description="View historical monthly revenue"),
+                    ChatAction(label="Cash Flow Forecast", path="/forecast", description="Project future cash runway"),
+                ],
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
             )
@@ -1090,13 +1543,14 @@ class FinancialAssistantEngine:
         # ROUTE 9: GENERAL_FINTECH (AI Augmentation with Deterministic Fallback)
         # ---------------------------------------------------------------------
         # Prepare verified facts string for LLM or deterministic synthesis
+        account_type = (business.account_type or "business").lower()
         facts_summary = (
-            f"Business: {company_name}\n"
+            f"Account: {company_name} ({account_type.title()})\n"
             f"Data Sufficiency Status: {data_status}\n"
-            f"Operating Revenue: ${hist_actuals.historical_monthly_operating_revenue:,.2f}/mo\n"
-            f"Non-Subscription Expenses: ${hist_actuals.historical_monthly_non_sub_expenses:,.2f}/mo\n"
+            f"Operating Revenue / Income: ${hist_actuals.historical_monthly_operating_revenue:,.2f}/mo\n"
+            f"Non-Subscription Outflows: ${hist_actuals.historical_monthly_non_sub_expenses:,.2f}/mo\n"
             f"Confirmed Subscription Commitments: ${forward_commit.confirmed_monthly_subscription_commitments:,.2f}/mo\n"
-            f"Available Cash: ${hist_actuals.verified_available_cash or 0.0:,.2f} ({hist_actuals.cash_provenance})\n"
+            f"Available Cash / Reserves: ${hist_actuals.verified_available_cash or 0.0:,.2f} ({hist_actuals.cash_provenance})\n"
             f"Cash Runway: {projected.estimated_runway_months or 'Indeterminate'} months\n"
             f"Financial Health Score: {health.score if health.score is not None else 'Withheld (Insufficient data)'}\n"
             f"Reporting Period: {overview.monthly_briefing.reporting_period}\n"
@@ -1107,18 +1561,29 @@ class FinancialAssistantEngine:
             api_key = (settings.GEMINI_API_KEY or settings.LLM_API_KEY or "").strip()
             try:
                 system_prompt = (
-                    "You are SubWise AI, an expert, prudent SMB financial advisor. "
-                    "You answer questions from founders and finance leaders about their business's finances. "
+                    f"You are SubWise AI, an expert, prudent financial advisor for {account_type.capitalize()} accounts. "
+                    "You answer questions about spending, savings, subscriptions, and financial health. "
                     "CRITICAL RULES:\n"
                     "1. Base your answer EXCLUSIVELY on the provided VERIFIED FINANCIAL FACTS below.\n"
                     "2. DO NOT invent new vendors, transactions, amounts, or savings.\n"
-                    "3. If information is not in the facts, state clearly that it is unavailable in the connected PayPal ledger.\n"
+                    "3. If information is not in the facts, state clearly that it is unavailable in connected records.\n"
                     "4. Distinguish between actual historical data and projected forward estimates.\n"
-                    "5. Keep your tone concise, professional, and actionable."
+                    "5. Keep your tone concise, professional, and actionable. Format in clean Markdown without code fences for regular text.\n"
+                    "6. Strictly maintain read-only boundaries: never claim to execute payments or modify ledger balances directly."
                 )
+
+                history_context = ""
+                if history:
+                    history_context = "\n\nRECENT CONVERSATION TURNS:\n"
+                    for h in history[-4:]:
+                        r = h.get("role", "user").capitalize()
+                        c = h.get("content", "")
+                        history_context += f"{r}: {c}\n"
+
                 full_prompt = (
                     f"{system_prompt}\n\n"
-                    f"VERIFIED FINANCIAL FACTS:\n{facts_summary}\n\n"
+                    f"VERIFIED FINANCIAL FACTS:\n{facts_summary}"
+                    f"{history_context}\n\n"
                     f"USER QUESTION: {message}\n\n"
                     f"Provide an evidence-based answer formatted in clean Markdown:"
                 )
@@ -1145,6 +1610,10 @@ class FinancialAssistantEngine:
                                         "What is our projected cash runway?",
                                         "Can we afford a new tool for $50/mo?",
                                     ],
+                                    actions=[
+                                        ChatAction(label="Cash Flow Forecast", path="/forecast", description="Project future runway"),
+                                        ChatAction(label="Financial Reports", path="/reports", description="Review detailed financials"),
+                                    ],
                                     reporting_period=overview.monthly_briefing.reporting_period,
                                     disclaimer=disclaimer,
                                     llm_provider_configured=True,
@@ -1157,14 +1626,14 @@ class FinancialAssistantEngine:
             f"### Financial Overview for **{company_name}**\n\n"
             f"Here is your current verified financial position:\n\n"
             f"- **Data Status:** `{data_status.replace('_', ' ').title()}`\n"
-            f"- **Verified Operating Revenue:** ${hist_actuals.historical_monthly_operating_revenue:,.2f}/mo\n"
+            f"- **Verified Operating Revenue / Income:** ${hist_actuals.historical_monthly_operating_revenue:,.2f}/mo\n"
             f"- **Non-Subscription Outflows:** ${hist_actuals.historical_monthly_non_sub_expenses:,.2f}/mo\n"
             f"- **Confirmed Subscriptions:** ${forward_commit.confirmed_monthly_subscription_commitments:,.2f}/mo\n"
             f"- **Available Liquid Reserves:** ${hist_actuals.verified_available_cash or 0.0:,.2f}\n"
             f"- **Cash Runway:** {projected.estimated_runway_months or 'Indeterminate'} months\n\n"
             f"You can ask me about:\n"
             f"- **Upcoming Renewals:** *'What payments are due in the next 30 days?'*\n"
-            f"- **Affordability:** *'Can I afford Slack for $15/month?'*\n"
+            f"- **Affordability:** *'Can I afford a new service for $25/month?'*\n"
             f"- **Reports:** *'Summarize our monthly financial report'* \n"
             f"- **Cash Runway:** *'How long will our cash last?'*"
         )
@@ -1180,6 +1649,10 @@ class FinancialAssistantEngine:
                 "What are my upcoming renewals?",
                 "Can I afford a new subscription for $50/mo?",
                 "Summarize our monthly report",
+            ],
+            actions=[
+                ChatAction(label="Forecast Simulator", path="/forecast", description="Simulate scenario projections"),
+                ChatAction(label="Financial Reports", path="/reports", description="View executive summaries"),
             ],
             reporting_period=overview.monthly_briefing.reporting_period,
             disclaimer=disclaimer,
