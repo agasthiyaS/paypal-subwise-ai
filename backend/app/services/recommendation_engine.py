@@ -506,10 +506,10 @@ class RecommendationEngine:
         # -------------------------------------------------------------
         if operating_revenue > 0 and forecast_status != "insufficient_data":
             for m_tot in monthly_scheduled_totals:
-                pct = m_tot.get("revenue_commitment_pct", 0.0)
+                pct = m_tot.get("revenue_commitment_pct")
                 m_name = m_tot.get("month_name", "")
                 c_amt = m_tot.get("total_confirmed_amount", 0.0)
-                if pct >= 35.0:
+                if pct is not None and pct >= 35.0:
                     add_rec(Recommendation(
                         business_id=business.id,
                         subscription_id=None,
