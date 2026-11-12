@@ -15,13 +15,17 @@ const SandboxPaymentModal = ({ isOpen, onClose, onSuccess }) => {
     setErrorMsg(null);
 
     try {
+      const origin = typeof window !== 'undefined' && window.location?.origin
+        ? window.location.origin
+        : 'http://localhost:3000';
+
       // Create Order using PayPal Orders v2 API
       const res = await paypalAPI.createOrder({
         amount: 5.00,
         currency: 'USD',
         description: 'SubWise AI Sandbox Payment Test',
-        return_url: 'http://localhost:3000/dashboard?paypal_test=success',
-        cancel_url: 'http://localhost:3000/dashboard?paypal_test=cancel'
+        return_url: `${origin}/dashboard?paypal_test=success`,
+        cancel_url: `${origin}/dashboard?paypal_test=cancel`
       });
 
       setOrderData(res);

@@ -5,11 +5,17 @@ from app.config import settings
 from app.database import Base, engine
 from app.api import auth, business, transactions, subscriptions, simulation, recommendations, paypal, forecast, financial_intelligence, reports, assistant, demo, expenses, household, budgets, savings_discovery, admin, vendors, entitlements
 
-# Create DB tables
-Base.metadata.create_all(bind=engine)
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("subwise_ai")
+
+# Database schema initialization:
+# In development/test mode, ensure all tables are created automatically.
+# In production, table lifecycle is managed by Alembic migrations to prevent migration conflicts.
+if settings.AUTO_CREATE_TABLES:
+    logger.info("Initializing database tables via Base.metadata.create_all (Development/Test Mode)")
+    Base.metadata.create_all(bind=engine)
+else:
+    logger.info("Database table auto-creation disabled; schema lifecycle is managed by Alembic migrations.")
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -17,13 +23,26 @@ app = FastAPI(
     description="PayPal SubWise AI: Intelligent Subscription Management & Cash-Flow Scenario Simulator for SMBs."
 )
 
-# CORS Middleware
+# CORS Middleware configuration:
+# Read allowed origins from settings.cors_origins_list (driven by CORS_ORIGINS environment variable)
+# Never use wildcard "*" with allow_credentials=True to comply with W3C standards.
+cors_origins = settings.cors_origins_list
+logger.info(f"Configuring CORS middleware with allowed origins: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "X-Requested-With",
+        "X-SubWise-Demo-Mode",
+        "X-SubWise-Webhook-Simulation",
+    ],
 )
 
 # Register Routers
