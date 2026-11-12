@@ -12,6 +12,8 @@ import CashFlowTrendChart from '../components/dashboard/CashFlowTrendChart';
 import CategoryPieChart from '../components/dashboard/CategoryPieChart';
 import IndividualDashboardView from '../components/dashboard/IndividualDashboardView';
 import HouseholdDashboardView from '../components/dashboard/HouseholdDashboardView';
+import FinancialWorkspaceLoader from '../components/common/FinancialWorkspaceLoader';
+import { ChartCardSkeleton, SectionRetryCard } from '../components/common/DashboardSkeleton';
 import {
   TrendingUp,
   TrendingDown,
@@ -47,6 +49,17 @@ const DashboardPage = () => {
   const [syncStatus, setSyncStatus] = useState(null);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Progressive rendering readiness flags
+  const [loadingStages, setLoadingStages] = useState({
+    overview: 'active',
+    data: 'pending',
+    health: 'pending',
+    intelligence: 'pending',
+  });
+  const [essentialReady, setEssentialReady] = useState(false);
+  const [importantReady, setImportantReady] = useState(false);
+  const [advancedReady, setAdvancedReady] = useState(false);
+
   const [transactions, setTransactions] = useState([]);
   const [subscriptionSummary, setSubscriptionSummary] = useState(null);
   const [subAnalysis, setSubAnalysis] = useState(null);
@@ -63,32 +76,85 @@ const DashboardPage = () => {
   const loadData = async () => {
     try {
       setLoadingData(true);
-      const calls = [
+      setLoadingStages({
+        overview: 'complete',
+        data: 'active',
+        health: 'pending',
+        intelligence: 'pending',
+      });
+
+      // Step A: Ensure Demo environment dataset exists if in Demo mode
+      if (isDemo) {
+        try {
+          const demoStatus = await demoAPI.getStatus();
+          if (!demoStatus.transaction_count || demoStatus.transaction_count === 0) {
+            await demoAPI.generate();
+            await refreshBusiness();
+          }
+        } catch (e) {
+          console.warn('Demo environment auto-init check:', e);
+        }
+      }
+
+      // Priority 1 (Essential): Core Transactions, Subscriptions & PayPal Connection Status
+      const [txRes, subRes, statusRes] = await Promise.allSettled([
         transactionsAPI.getTransactions({ limit: 500 }),
         subscriptionsAPI.getSubscriptions(),
-        recommendationsAPI.getRecommendations(),
         paypalAPI.getStatus(),
-        subscriptionsAPI.getAnalysis(),
-      ];
-      const isConsumer = business?.account_type === 'individual' || business?.account_type === 'household';
-      if (isConsumer) {
-        calls.push(expensesAPI.getSummary());
-        calls.push(intelligenceAPI.getUnified());
-      }
-      const results = await Promise.allSettled(calls);
-      const [txRes, subRes, recRes, statusRes, analysisRes, expSumRes, intelRes] = results;
+      ]);
 
       if (txRes?.status === 'fulfilled') setTransactions(txRes.value || []);
       if (subRes?.status === 'fulfilled') setSubscriptionSummary(subRes.value);
-      if (recRes?.status === 'fulfilled') setRecommendations(recRes.value || []);
       if (statusRes?.status === 'fulfilled') setPaypalStatus(statusRes.value);
-      if (analysisRes?.status === 'fulfilled') setSubAnalysis(analysisRes.value);
-      if (expSumRes?.status === 'fulfilled') setExpenseSummary(expSumRes.value);
-      if (intelRes?.status === 'fulfilled') setUnifiedIntelligence(intelRes.value);
+
+      // Essential statistics are now ready to display
+      setEssentialReady(true);
+      setLoadingStages(prev => ({
+        ...prev,
+        data: 'complete',
+        health: 'active',
+      }));
+
+      // Priority 2 (Important): Spending Analysis, Health Breakdown & Personal Expense Summaries
+      const isConsumer = business?.account_type === 'individual' || business?.account_type === 'household';
+      const p2Calls = [subscriptionsAPI.getAnalysis()];
+      if (isConsumer) {
+        p2Calls.push(expensesAPI.getSummary());
+      }
+      const p2Results = await Promise.allSettled(p2Calls);
+
+      if (p2Results[0]?.status === 'fulfilled') setSubAnalysis(p2Results[0].value);
+      if (isConsumer && p2Results[1]?.status === 'fulfilled') setExpenseSummary(p2Results[1].value);
+
+      setImportantReady(true);
+      setLoadingStages(prev => ({
+        ...prev,
+        health: 'complete',
+        intelligence: 'active',
+      }));
+
+      // Priority 3 (Advanced): Recommendations, Intelligence & Forward Projections
+      const p3Calls = [recommendationsAPI.getRecommendations()];
+      if (isConsumer) {
+        p3Calls.push(intelligenceAPI.getUnified());
+      }
+      const p3Results = await Promise.allSettled(p3Calls);
+
+      if (p3Results[0]?.status === 'fulfilled') setRecommendations(p3Results[0].value || []);
+      if (isConsumer && p3Results[1]?.status === 'fulfilled') setUnifiedIntelligence(p3Results[1].value);
+
+      setAdvancedReady(true);
+      setLoadingStages({
+        overview: 'complete',
+        data: 'complete',
+        health: 'complete',
+        intelligence: 'complete',
+      });
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
     } finally {
       setLoadingData(false);
+      setEssentialReady(true);
     }
   };
 
@@ -477,7 +543,23 @@ const DashboardPage = () => {
     categoryPieData: effectiveCategoryPieData,
     expenseSummary,
     unifiedIntelligence,
+    essentialReady,
+    importantReady,
+    advancedReady,
+    loadingStages,
   };
+
+  // Render polished stage-based loading experience during initial data hydration
+  if (!essentialReady && loadingData) {
+    return (
+      <FinancialWorkspaceLoader
+        stages={loadingStages}
+        accountType={accountType}
+        companyName={displayCompanyName}
+        isDemo={isDemo}
+      />
+    );
+  }
 
   if (accountType === 'individual') {
     return (
@@ -901,7 +983,9 @@ const DashboardPage = () => {
             ${potentialAnnualSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} potential annual savings
           </div>
           <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            {recommendations.length > 0 ? (
+            {!advancedReady ? (
+              <div style={{ height: '36px', background: 'rgba(255,255,255,0.4)', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+            ) : recommendations.length > 0 ? (
               recommendations.slice(0, 2).map((r) => (
                 <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.8rem', color: 'var(--amber-dark)' }}>
                   <AlertTriangle size={13} style={{ flexShrink: 0 }} />
@@ -1071,8 +1155,17 @@ const DashboardPage = () => {
 
       {/* Main Charts: Consolidated 2-Column Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
-        <IncomeExpenseChart data={monthlyChartData} />
-        <CategoryPieChart data={categoryPieData} />
+        {!importantReady ? (
+          <>
+            <ChartCardSkeleton title="Loading cash-flow trends..." height={320} />
+            <ChartCardSkeleton title="Loading subscription category allocation..." height={320} />
+          </>
+        ) : (
+          <>
+            <IncomeExpenseChart data={monthlyChartData} />
+            <CategoryPieChart data={categoryPieData} />
+          </>
+        )}
       </div>
 
       <PayPalConnectModal

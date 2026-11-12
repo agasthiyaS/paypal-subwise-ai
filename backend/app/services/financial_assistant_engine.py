@@ -239,16 +239,95 @@ class FinancialAssistantEngine:
         )
 
     # -------------------------------------------------------------------------
-    # Intent Detection & Query Parsing
+    # Conversational Intelligence & Intent Classification (Phase 10 Upgrade)
     # -------------------------------------------------------------------------
     @classmethod
-    def detect_intent(cls, message: str) -> str:
+    def _get_casual_subtype(cls, message: str) -> str:
+        m = message.lower().strip()
+        clean = re.sub(r"[^\w\s]", "", m).strip()
+
+        # Greetings
+        if re.search(r"^(hi+|hello+|hey+|howdy|good\s+(morning|afternoon|evening|day)|greetings|yo|sup)\b", clean):
+            return "greeting"
+
+        # Checkin / Status
+        if any(p in clean for p in [
+            "how are you", "how are u", "how r u", "hows it going", "how is it going",
+            "how have you been", "what are you doing", "what r u doing", "what are u doing",
+            "what are you up to", "what is up", "whats up", "what's up", "who are you",
+            "what can you do", "introduce yourself", "tell me about yourself", "what is your name"
+        ]):
+            return "checkin"
+
+        # Appreciation
+        if any(p in clean for p in [
+            "thanks", "thank you", "thank u", "thx", "appreciate it", "great", "awesome",
+            "perfect", "cool", "nice", "good job", "well done", "sounds good", "that helps", "got it"
+        ]) and len(clean.split()) <= 6:
+            return "appreciation"
+
+        # Farewells
+        if any(p in clean for p in [
+            "bye", "goodbye", "see you", "see ya", "see you later", "good night", "goodnight",
+            "catch you later", "take care", "have a good one", "talk to you later"
+        ]) and len(clean.split()) <= 6:
+            return "farewell"
+
+        # Boredom & Entertainment
+        if any(p in clean for p in [
+            "bored", "im bored", "i am bored", "tell me something interesting", "tell me a joke",
+            "make me laugh", "tell me a fun fact", "random fact", "entertain me",
+            "what should we talk about", "talk to me", "can we chat", "lets chat"
+        ]):
+            return "boredom"
+
+        return "general_casual"
+
+    @classmethod
+    def _get_knowledge_subtype(cls, message: str) -> str:
+        m = message.lower().strip()
+        if "machine learning" in m or re.search(r"\bml\b", m):
+            return "machine_learning"
+        if "artificial intelligence" in m or re.search(r"\bai\b", m):
+            return "ai"
+        if "deep learning" in m:
+            return "deep_learning"
+        if "inflation" in m:
+            return "inflation"
+        if "compound interest" in m:
+            return "compound_interest"
+        if "credit score" in m:
+            return "credit_score"
+        if "cash flow" in m:
+            return "cash_flow"
+        if "blockchain" in m or "crypto" in m:
+            return "blockchain"
+        if "cloud computing" in m:
+            return "cloud_computing"
+        if "quantum computing" in m:
+            return "quantum_computing"
+        if "opportunity cost" in m:
+            return "opportunity_cost"
+        if "emergency fund" in m:
+            return "emergency_fund"
+        if re.search(r"\bpython\b", m):
+            return "python"
+        return "general_concept"
+
+    @classmethod
+    def classify_conversational_type(
+        cls,
+        message: str,
+        history: Optional[List[Dict[str, Any]]] = None
+    ) -> Tuple[str, Optional[str]]:
         """
-        Classifies incoming user question into fintech intent categories.
+        Classifies incoming user messages into conversational, educational, or fintech intent categories.
+        Ensures everyday chat is not forced into financial ledger inquiries.
         """
         m = message.lower().strip()
+        clean = re.sub(r"[^\w\s]", "", m).strip()
 
-        # 0. Read-Only Safety Guard: Mutating requests (Phase 9 requirement)
+        # 0. Read-Only Safety Guard: Mutating requests (Strict Security Boundary)
         if any(p in m for p in [
             "cancel subscription", "cancel my subscription", "cancel netflix", "cancel spotify",
             "cancel hulu", "unsubscribe", "cancel service", "stop subscription", "cancel payment",
@@ -257,109 +336,560 @@ class FinancialAssistantEngine:
             "increase budget", "lower budget", "delete expense", "delete transaction", "remove subscription",
             "add expense", "create subscription", "transfer funds"
         ]) or (m.startswith(("cancel ", "pay ", "delete ", "transfer ", "send money", "modify budget")) and len(m.split()) <= 6):
-            return "READ_ONLY_GUARD"
+            return "READ_ONLY_GUARD", None
 
-        # 0B. Household Member Spending (Phase 9 multi-account requirement)
+        # Check for presence of explicit personal financial indicators
+        personal_finance_tokens = [
+            "my spending", "my budget", "my revenue", "my subscription", "my subscriptions",
+            "my money", "my account", "my expense", "my expenses", "my cash", "our spending",
+            "our budget", "our revenue", "our subscription", "our subscriptions", "our money",
+            "our account", "our expense", "our expenses", "our runway", "did i spend",
+            "how much did i spend", "what did i spend", "can i afford", "can we afford",
+            "am i over budget", "are we over budget", "who spent", "household member",
+            "household members", "shared expenses", "member breakdown", "who is spending"
+        ]
+        has_personal_finance = any(tok in m for tok in personal_finance_tokens)
+
+        # 1. Casual Conversation: Greetings, Check-ins, Appreciation, Farewells, Boredom
+        if not has_personal_finance:
+            # Greetings
+            if re.search(r"^(hi+|hello+|hey+|howdy|good\s+(morning|afternoon|evening|day)|greetings|yo|sup)\b", clean) and len(clean.split()) <= 4:
+                return "CASUAL_CONVERSATION", cls._get_casual_subtype(message)
+
+            # Checkin
+            if any(p in clean for p in [
+                "how are you", "how are u", "how r u", "hows it going", "how is it going",
+                "how have you been", "what are you doing", "what r u doing", "what are u doing",
+                "what are you up to", "what is up", "whats up", "what's up", "who are you",
+                "what can you do", "introduce yourself", "tell me about yourself"
+            ]):
+                return "CASUAL_CONVERSATION", "checkin"
+
+            # Appreciation
+            if any(p in clean for p in [
+                "thanks", "thank you", "thank u", "thx", "appreciate it", "great", "awesome",
+                "perfect", "cool", "nice", "good job", "well done", "sounds good", "that helps", "got it"
+            ]) and len(clean.split()) <= 5:
+                return "CASUAL_CONVERSATION", "appreciation"
+
+            # Farewells
+            if any(p in clean for p in [
+                "bye", "goodbye", "see you", "see ya", "see you later", "good night", "goodnight",
+                "catch you later", "take care", "have a good one", "talk to you later"
+            ]) and len(clean.split()) <= 5:
+                return "CASUAL_CONVERSATION", "farewell"
+
+            # Boredom & Entertainment
+            if any(p in clean for p in [
+                "bored", "im bored", "i am bored", "tell me something interesting", "tell me a joke",
+                "make me laugh", "tell me a fun fact", "random fact", "entertain me",
+                "what should we talk about", "talk to me", "can we chat", "lets chat"
+            ]):
+                return "CASUAL_CONVERSATION", "boredom"
+
+        # 2. Contextual Follow-up (Phase 9 Contextual Memory across turns)
+        if any(p in m for p in [
+            "what about last month", "and last month", "previous month", "how about last month",
+            "why did it increase", "why is it high", "why is that", "explain why",
+            "show more details", "tell me more", "break that down", "how does that work",
+            "how does it", "how do they", "how so", "can you elaborate", "elaborate on that"
+        ]):
+            # Check if previous context was general knowledge or financial
+            prev_was_knowledge = False
+            if history and len(history) >= 2:
+                for h in reversed(history[:-1]):
+                    u_text = h.get("content", "").lower()
+                    if any(k in u_text for k in ["machine learning", "artificial intelligence", "inflation", "blockchain", "quantum", "compound interest"]):
+                        prev_was_knowledge = True
+                        break
+            if prev_was_knowledge:
+                return "CONTEXTUAL_FOLLOWUP", "knowledge"
+            return "CONTEXTUAL_FOLLOWUP", "financial"
+
+        # 3. General Knowledge / Educational Questions
+        # e.g., "explain machine learning", "what is inflation", "how does compound interest work"
+        if not has_personal_finance and (
+            m.startswith(("explain ", "what is ", "what are ", "how does ", "how do ", "define ", "tell me about ", "why is ", "who is ", "who was "))
+            or "difference between" in m
+        ):
+            account_words = ["my", "our", "i", "we", "me", "us", "mine", "account", "business", "company", "budget", "spending", "subscription", "runway", "balance", "paypal"]
+            if not any(re.search(rf"\b{w}\b", m) for w in account_words):
+                return "GENERAL_KNOWLEDGE", cls._get_knowledge_subtype(message)
+
+        # 4. Household Member Spending
         if any(p in m for p in [
             "who spent the most", "who spent more", "member spending", "partner spending",
             "household member", "household members", "shared expenses", "member breakdown",
             "who is spending", "roommate spending", "how much did each member spend"
         ]):
-            return "HOUSEHOLD_SPENDING"
+            return "HOUSEHOLD_SPENDING", None
 
-        # 0C. Contextual Follow-up (Phase 9 contextual memory)
-        if any(p in m for p in [
-            "what about last month", "and last month", "previous month", "how about last month",
-            "why did it increase", "why is it high", "why is that", "explain why",
-            "show more details", "tell me more", "break that down"
-        ]):
-            return "CONTEXTUAL_FOLLOWUP"
-
-        # 1. Vendor Alternatives & Cheaper Plans (Phase 4)
+        # 5. Vendor Alternatives & Cheaper Plans
         if any(p in m for p in [
             "cheaper alternative", "alternative to", "switch provider", "cheaper plan",
             "cheaper tier", "compare vendor", "find alternatives", "cheaper options",
             "alternatives for", "cheaper software", "cheaper streaming", "substitute",
             "cheaper alternatives", "lower tier"
         ]):
-            return "VENDOR_ALTERNATIVES"
+            return "VENDOR_ALTERNATIVES", None
 
-        # 2. Spending Breakdown & Top Outflows (Phase 3 & 4)
+        # 6. Spending Breakdown & Top Outflows
         if any(p in m for p in [
             "where did my money go", "where did most of my money go", "biggest expense",
             "top spending", "highest spending", "which category", "spending breakdown",
             "spending by category", "what did i spend the most on", "spending on groceries",
-            "which expenses increased", "unusual spending"
+            "which expenses increased", "unusual spending", "how much did i spend",
+            "what did i spend"
         ]):
-            return "SPENDING_BREAKDOWN"
+            return "SPENDING_BREAKDOWN", None
 
-        # 3. Budget Pacing & Health Status (Phase 3 & 4)
+        # 7. Budget Pacing & Health Status
         if any(p in m for p in [
             "exceeding my budget", "over budget", "budget limit", "how much budget",
-            "am i over budget", "budget status", "budget remaining", "budget cushion"
+            "am i over budget", "budget status", "budget remaining", "budget cushion",
+            "exceeding our budget", "over our budget"
         ]):
-            return "BUDGET_STATUS"
+            return "BUDGET_STATUS", None
 
-        # 4. Affordability / Purchase Simulation
+        # 8. Affordability / Purchase Simulation
         if any(p in m for p in [
             "can i afford", "can we afford", "should we buy", "should i buy",
             "can we buy", "can i buy", "what if we buy", "what if we subscribe",
             "simulate purchase", "afford a", "afford to buy", "afford new"
         ]):
-            return "AFFORDABILITY_CHECK"
+            return "AFFORDABILITY_CHECK", None
 
-        # 2. Upcoming Renewals / Payment Calendar
+        # 9. Upcoming Renewals / Payment Calendar
         if any(p in m for p in [
             "renewal", "renewing", "upcoming payment", "next payment",
             "payment calendar", "due date", "when is my next", "next renewal",
             "payments due", "renewals next"
         ]):
-            return "RENEWAL_CALENDAR"
+            return "RENEWAL_CALENDAR", None
 
-        # 3. Forecast / Runway / Cash Burn
+        # 10. Forecast / Runway / Cash Burn
         if any(p in m for p in [
             "forecast", "runway", "cash flow", "burn rate", "closing balance",
             "run out of money", "projected balance", "how long will", "cash projection",
             "how many months of cash"
         ]):
-            return "FORECAST_INQUIRY"
+            return "FORECAST_INQUIRY", None
 
-        # 4. Reports / Summary
+        # 11. Reports / Summary
         if any(p in m for p in [
             "monthly report", "report summary", "summarize report", "financial report",
             "expense report", "briefing", "executive summary", "generate report"
         ]):
-            return "REPORT_SUMMARY"
+            return "REPORT_SUMMARY", None
 
-        # 5. Financial Health & Risks
+        # 12. Financial Health & Risks
         if any(p in m for p in [
             "health score", "health index", "financial health", "risks", "critical risk",
             "risk intelligence", "how healthy", "financial score"
         ]):
-            return "HEALTH_AND_RISKS"
+            return "HEALTH_AND_RISKS", None
 
-        # 6. Recommendations & Actions
+        # 13. Recommendations & Actions
         if any(p in m for p in [
             "recommendation", "what should i do", "cfo action", "cut cost",
             "save money", "optimize spend", "action plan", "negotiate"
         ]):
-            return "RECOMMENDATIONS"
+            return "RECOMMENDATIONS", None
 
-        # 7. Operating Revenue
+        # 14. Operating Revenue
         if any(p in m for p in [
             "operating revenue", "how much revenue", "how much money do we make",
             "monthly revenue", "sales revenue", "top line", "gross income"
         ]):
-            return "REVENUE_INQUIRY"
+            return "REVENUE_INQUIRY", None
 
-        # 8. Subscription Spend / Vendor Inquiry
+        # 15. Subscription Spend / Vendor Inquiry
         if any(p in m for p in [
             "subscription", "subscriptions", "spend on", "how much do i spend",
-            "total software", "software cost", "vendor", "saas spend", "monthly sub"
+            "total software", "software cost", "vendor", "saas spend", "monthly sub",
+            "recurring payment", "recurring payments"
         ]):
-            return "SPEND_OVERVIEW"
+            return "SPEND_OVERVIEW", None
 
-        return "GENERAL_FINTECH"
+        # 16. General Finance Inquiries
+        finance_keywords = [
+            "money", "dollar", "cash", "finance", "financial", "ledger", "invoice",
+            "payment", "bank", "fund", "balance", "income", "profit", "burn", "account"
+        ]
+        if any(re.search(rf"\b{w}\b", m) for w in finance_keywords):
+            return "GENERAL_FINTECH", None
+
+        # 17. Non-financial casual fallback
+        return "CASUAL_CONVERSATION", "general_casual"
+
+    @classmethod
+    def detect_intent(
+        cls,
+        message: str,
+        history: Optional[List[Dict[str, Any]]] = None
+    ) -> str:
+        """
+        Classifies incoming user question into fintech or conversational intent categories.
+        """
+        intent, _ = cls.classify_conversational_type(message, history=history)
+        return intent
+
+    @classmethod
+    def _call_gemini_conversational(
+        cls,
+        message: str,
+        intent: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        account_type: str = "business",
+    ) -> Optional[str]:
+        if not cls.is_llm_configured():
+            return None
+
+        api_key = (settings.GEMINI_API_KEY or settings.LLM_API_KEY or "").strip()
+        if not api_key:
+            return None
+
+        if intent == "CASUAL_CONVERSATION":
+            system_prompt = (
+                f"You are SubWise AI, a friendly, intelligent, and human-like conversational assistant for a {account_type.capitalize()} account. "
+                "You converse naturally, warmly, and concisely. "
+                "CRITICAL GUIDELINES:\n"
+                "1. Keep responses natural, conversational, and concise (1-3 sentences for greetings and casual remarks).\n"
+                "2. Match the user's conversational tone.\n"
+                "3. Do NOT use excessive emojis (at most 1 contextual emoji or none).\n"
+                "4. Do NOT repeatedly introduce yourself with your full name or company unless specifically asked.\n"
+                "5. Do NOT force every response into a financial lecture or pitch.\n"
+                "6. Never invent fake personal financial accounts, transactions, or balances.\n"
+                "7. Never claim to perform payments, fund transfers, cancellations, or ledger modifications."
+            )
+        else:
+            system_prompt = (
+                f"You are SubWise AI, an intelligent, helpful assistant for a {account_type.capitalize()} account. "
+                "You explain concepts and answer general knowledge questions clearly, accurately, and concisely. "
+                "CRITICAL GUIDELINES:\n"
+                "1. Provide clean, clear explanations in natural language.\n"
+                "2. Keep the answer educational, structured, and easy to understand.\n"
+                "3. Format with clean Markdown (bullet points or bolding where appropriate).\n"
+                "4. Do NOT invent fake user personal account data.\n"
+                "5. Never claim to perform real-world financial payments or account mutations."
+            )
+
+        history_context = ""
+        if history:
+            history_context = "\n\nRECENT CONVERSATION TURNS:\n"
+            for h in history[-6:]:
+                r = h.get("role", "user").capitalize()
+                c = h.get("content", "")
+                history_context += f"{r}: {c}\n"
+
+        full_prompt = (
+            f"{system_prompt}\n"
+            f"{history_context}\n"
+            f"USER: {message}\n\n"
+            f"ASSISTANT:"
+        )
+
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+            payload = {"contents": [{"parts": [{"text": full_prompt}]}]}
+            with httpx.Client(timeout=8.0) as client:
+                resp = client.post(url, json=payload)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates:
+                        text = candidates[0].get("content", {}).get("parts", [{}])[0].get("text")
+                        if text and text.strip():
+                            return text.strip()
+        except Exception:
+            return None
+
+        return None
+
+    @classmethod
+    def _generate_deterministic_casual(
+        cls,
+        subtype: str,
+        message: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+        account_type: str = "business",
+    ) -> Tuple[str, List[str]]:
+        clean = re.sub(r"[^\w\s]", "", message.lower()).strip()
+        has_prior_assistant_turns = any(h.get("role") == "assistant" for h in (history or []))
+
+        if subtype == "greeting":
+            if not has_prior_assistant_turns:
+                text = "Hey! How's it going? I'm your SubWise AI assistant. What can I help you with today?"
+            else:
+                text = "Hey again! What's on your mind?"
+            followups = [
+                "How much did I spend this month?",
+                "What subscriptions am I paying for?",
+                "Explain machine learning",
+            ]
+            return text, followups
+
+        if subtype == "checkin":
+            if any(k in clean for k in ["how are you", "how are u", "how r u"]):
+                text = "I'm doing well, thank you for asking! Ready to help you analyze your finances, answer questions, or just chat. How is your day going?"
+            elif any(k in clean for k in ["what are you doing", "what r u doing", "what are u doing", "what are you up to"]):
+                text = "Just here and ready to help! I'm keeping track of financial insights and ready to chat about whatever is on your mind. What are you up to?"
+            elif any(k in clean for k in ["what is up", "whats up", "what's up"]):
+                text = "Not much! Just ready to help you explore your finances, learn something new, or have a quick chat. What's on your mind today?"
+            elif any(k in clean for k in ["who are you", "what can you do", "introduce yourself", "tell me about yourself"]):
+                text = (
+                    "I'm SubWise AI, your conversational assistant. I can chat casually, answer general knowledge questions, "
+                    "and provide in-depth financial intelligence—like tracking recurring subscriptions, calculating budgets, "
+                    "forecasting cash flow, and identifying cost-saving alternatives."
+                )
+            else:
+                text = "Everything is running smoothly! Ready for whatever questions or financial insights you have in mind. How can I help?"
+            followups = [
+                "Where did most of my money go this month?",
+                "Can I afford a new subscription for $30/mo?",
+                "Tell me something interesting",
+            ]
+            return text, followups
+
+        if subtype == "appreciation":
+            text = "You're very welcome! Let me know whenever you need anything else."
+            followups = [
+                "What are my upcoming renewals?",
+                "Am I over budget?",
+                "Explain compound interest",
+            ]
+            return text, followups
+
+        if subtype == "farewell":
+            if "night" in clean:
+                text = "Good night! Rest well and see you next time."
+            else:
+                text = "Goodbye! Have a great day ahead, and feel free to reach out whenever you're back."
+            return text, []
+
+        if subtype == "boredom":
+            if any(k in clean for k in ["bored", "im bored"]):
+                text = "Let's make things interesting! Want to learn something new or just have a casual chat? We could explore an interesting concept, talk about tech, or take a quick look at your financial trends."
+            elif any(k in clean for k in ["joke", "laugh"]):
+                text = "Why did the computer keep freezing? Because it left its Windows open! Let me know if you want another one, or if you'd like to explore something new."
+            elif any(k in clean for k in ["interesting", "fact"]):
+                text = (
+                    "Here's an interesting fact: The word 'salary' comes from the Latin 'salarium', which was an allowance "
+                    "given to Roman soldiers to purchase salt—a prized commodity at the time. Want to hear another fun fact or dive into a topic?"
+                )
+            else:
+                text = "I'm always up for a good conversation! We can discuss how AI works, talk about economics, or check in on your financial goals. What sounds fun?"
+            followups = [
+                "Tell me something interesting",
+                "Explain machine learning",
+                "How much did I spend this month?",
+            ]
+            return text, followups
+
+        # Default general casual
+        text = "I'm here and happy to chat! Whether you want to discuss everyday topics, learn something new, or dive into your financial numbers, feel free to ask."
+        followups = [
+            "How much did I spend this month?",
+            "Explain machine learning",
+            "What subscriptions do I have?",
+        ]
+        return text, followups
+
+    @classmethod
+    def _generate_deterministic_knowledge(
+        cls,
+        subtype: str,
+        message: str,
+        history: Optional[List[Dict[str, Any]]] = None,
+    ) -> Tuple[str, List[str]]:
+        if subtype == "machine_learning":
+            text = (
+                "Machine learning is a type of AI that helps computers learn patterns from data and make predictions "
+                "without being explicitly programmed for every task. In finance, it powers fraud detection, algorithmic analysis, "
+                "credit scoring, and automated subscription anomaly detection."
+            )
+            followups = [
+                "How is machine learning used in finance?",
+                "What is the difference between AI and ML?",
+                "How much did I spend this month?",
+            ]
+            return text, followups
+
+        if subtype == "ai":
+            text = (
+                "Artificial intelligence (AI) is the broader branch of computer science dedicated to building systems "
+                "capable of performing tasks that typically require human cognition—such as understanding speech, "
+                "recognizing images, reasoning, and solving complex problems."
+            )
+            followups = [
+                "Explain machine learning",
+                "What is deep learning?",
+                "How does SubWise AI use financial intelligence?",
+            ]
+            return text, followups
+
+        if subtype == "deep_learning":
+            text = (
+                "Deep learning is a specialized branch of machine learning that uses multi-layered artificial neural networks. "
+                "Inspired by the human brain, deep neural networks excel at recognizing complex patterns in raw data like "
+                "images, audio, and large-scale language models."
+            )
+            followups = [
+                "Explain machine learning",
+                "What is artificial intelligence?",
+                "How much did I spend this month?",
+            ]
+            return text, followups
+
+        if subtype == "inflation":
+            text = (
+                "Inflation is the gradual rate at which the general prices of goods and services rise across an economy "
+                "over time, which reduces the purchasing power of money. When inflation is high, every dollar buys a smaller "
+                "percentage of a good or service."
+            )
+            followups = [
+                "What is compound interest?",
+                "How does inflation affect cash runway?",
+                "Where can I cut costs?",
+            ]
+            return text, followups
+
+        if subtype == "compound_interest":
+            text = (
+                "Compound interest is interest calculated on both the initial principal and the accumulated interest from "
+                "previous periods. Because you earn 'interest on your interest,' compounding generates exponential growth "
+                "over longer timeframes."
+            )
+            followups = [
+                "What is inflation?",
+                "What is opportunity cost?",
+                "What is my cash runway?",
+            ]
+            return text, followups
+
+        if subtype == "credit_score":
+            text = (
+                "A credit score is a numerical rating (typically ranging from 300 to 850) that indicates an individual's "
+                "creditworthiness. It is calculated from on-time payment history, credit utilization, length of credit history, "
+                "new credit inquiries, and credit mix."
+            )
+            followups = [
+                "What is compound interest?",
+                "Am I over budget?",
+                "Where did most of my money go?",
+            ]
+            return text, followups
+
+        if subtype == "cash_flow":
+            text = (
+                "Cash flow is the net amount of money moving into and out of an account or business over a given period. "
+                "Positive cash flow occurs when cash inflows exceed outflows, while negative cash flow means expenses exceed "
+                "incoming revenue."
+            )
+            followups = [
+                "What is our projected cash runway?",
+                "How much did I spend this month?",
+                "What are my upcoming subscription renewals?",
+            ]
+            return text, followups
+
+        if subtype == "blockchain":
+            text = (
+                "A blockchain is a decentralized, distributed digital ledger that securely records transactions across a network "
+                "of computers. Because each block is cryptographically linked to the previous one, the records are transparent and "
+                "highly resistant to retroactive tampering."
+            )
+            followups = [
+                "What is cloud computing?",
+                "Explain machine learning",
+                "What are my active subscriptions?",
+            ]
+            return text, followups
+
+        if subtype == "cloud_computing":
+            text = (
+                "Cloud computing is the on-demand delivery of computing services—such as servers, storage, databases, and "
+                "software—over the internet with pay-as-you-go pricing, enabling organizations to scale resources without "
+                "purchasing physical hardware."
+            )
+            followups = [
+                "What is machine learning?",
+                "Find cheaper software alternatives",
+                "What are my recurring subscriptions?",
+            ]
+            return text, followups
+
+        if subtype == "quantum_computing":
+            text = (
+                "Quantum computing uses the principles of quantum mechanics—such as superposition and entanglement—to process "
+                "complex data exponentially faster than classical computers for specialized classes of problems, such as cryptography "
+                "and complex molecular simulations."
+            )
+            followups = [
+                "Explain machine learning",
+                "What is artificial intelligence?",
+                "Tell me something interesting",
+            ]
+            return text, followups
+
+        if subtype == "opportunity_cost":
+            text = (
+                "Opportunity cost represents the potential benefit or value an individual or business misses out on when choosing "
+                "one alternative over another. For instance, spending money on an unused subscription carries the opportunity cost "
+                "of not investing those funds elsewhere."
+            )
+            followups = [
+                "What recommendations do you have to cut costs?",
+                "Where did most of my money go?",
+                "Can I afford a new subscription?",
+            ]
+            return text, followups
+
+        if subtype == "emergency_fund":
+            text = (
+                "An emergency fund is a dedicated savings reserve—typically 3 to 6 months of essential living expenses—kept in an "
+                "accessible, low-risk account to cover unexpected expenses such as medical emergencies or income disruptions."
+            )
+            followups = [
+                "What is our cash runway?",
+                "Am I over budget?",
+                "Where can I save money?",
+            ]
+            return text, followups
+
+        if subtype == "python":
+            text = (
+                "Python is a high-level, interpreted programming language celebrated for its readable syntax, versatility, and "
+                "rich ecosystem of open-source libraries. It is widely used in web development, automation, data analytics, and AI."
+            )
+            followups = [
+                "Explain machine learning",
+                "Tell me something interesting",
+                "What can you do?",
+            ]
+            return text, followups
+
+        # General concept fallback
+        clean_topic = re.sub(
+            r"^(explain|what is|what are|how does|how do|tell me about|define)\s+",
+            "",
+            message,
+            flags=re.IGNORECASE
+        ).strip(" ?.!").title()
+        if not clean_topic:
+            clean_topic = "This Concept"
+
+        text = (
+            f"**{clean_topic}** is a fundamental concept often encountered in technology, economics, or general knowledge. "
+            f"It involves understanding how individual components interact within a structured framework to produce consistent results. "
+            f"Let me know if you would like to explore specific aspects or applications, or feel free to ask about your financial records!"
+        )
+        followups = [
+            "Explain machine learning",
+            "How much did I spend this month?",
+            "What subscriptions do I have?",
+        ]
+        return text, followups
 
     @classmethod
     def _parse_affordability_params(cls, message: str) -> Dict[str, Any]:
@@ -439,7 +969,7 @@ class FinancialAssistantEngine:
         specialized simulation / report routing, and AI or deterministic synthesis.
         """
         message = request.message.strip()
-        intent = cls.detect_intent(message)
+        intent = cls.detect_intent(message, history=history)
 
         # 1. Fetch deterministic financial overview & ground truth facts
         overview = FinancialIntelligenceEngine.generate_overview(
@@ -517,6 +1047,111 @@ class FinancialAssistantEngine:
                 actions=actions,
                 reporting_period=overview.monthly_briefing.reporting_period,
                 disclaimer=disclaimer,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE: CASUAL CONVERSATION (Natural Greetings, Check-ins, Appreciation, Farewells)
+        # ---------------------------------------------------------------------
+        if intent == "CASUAL_CONVERSATION":
+            subtype = cls._get_casual_subtype(message)
+            is_llm = cls.is_llm_configured()
+            if is_llm:
+                ai_text = cls._call_gemini_conversational(
+                    message=message,
+                    intent=intent,
+                    history=history,
+                    account_type=business.account_type or "business",
+                )
+                if ai_text:
+                    return AssistantQueryResponse(
+                        response_text=ai_text,
+                        is_ai_generated=True,
+                        generation_model="Google Gemini 1.5 Flash (Conversational AI)",
+                        intent=intent,
+                        data_sufficiency_status=data_status,
+                        evidence_cards=[],
+                        suggested_followups=[
+                            "How much did I spend this month?",
+                            "What subscriptions am I paying for?",
+                            "Explain machine learning",
+                        ],
+                        actions=[],
+                        reporting_period=overview.monthly_briefing.reporting_period,
+                        disclaimer="SubWise AI conversational assistant.",
+                        llm_provider_configured=True,
+                    )
+
+            # Deterministic conversational fallback
+            text, followups = cls._generate_deterministic_casual(
+                subtype=subtype,
+                message=message,
+                history=history,
+                account_type=business.account_type or "business",
+            )
+            return AssistantQueryResponse(
+                response_text=text,
+                is_ai_generated=False,
+                generation_model="SubWise Conversational Intelligence Engine",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[],
+                suggested_followups=followups,
+                actions=[],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer="SubWise AI conversational assistant.",
+                llm_provider_configured=is_llm,
+            )
+
+        # ---------------------------------------------------------------------
+        # ROUTE: GENERAL KNOWLEDGE (Educational Explanations, Concepts, General Topics)
+        # ---------------------------------------------------------------------
+        if intent == "GENERAL_KNOWLEDGE":
+            subtype = cls._get_knowledge_subtype(message)
+            is_llm = cls.is_llm_configured()
+            if is_llm:
+                ai_text = cls._call_gemini_conversational(
+                    message=message,
+                    intent=intent,
+                    history=history,
+                    account_type=business.account_type or "business",
+                )
+                if ai_text:
+                    return AssistantQueryResponse(
+                        response_text=ai_text,
+                        is_ai_generated=True,
+                        generation_model="Google Gemini 1.5 Flash (Educational & Knowledge)",
+                        intent=intent,
+                        data_sufficiency_status=data_status,
+                        evidence_cards=[],
+                        suggested_followups=[
+                            "How does this apply to finance?",
+                            "How much did I spend this month?",
+                            "What are my active subscriptions?",
+                        ],
+                        actions=[],
+                        reporting_period=overview.monthly_briefing.reporting_period,
+                        disclaimer="SubWise AI educational knowledge mode.",
+                        llm_provider_configured=True,
+                    )
+
+            # Deterministic general knowledge fallback
+            text, followups = cls._generate_deterministic_knowledge(
+                subtype=subtype,
+                message=message,
+                history=history,
+            )
+            return AssistantQueryResponse(
+                response_text=text,
+                is_ai_generated=False,
+                generation_model="SubWise Conversational Intelligence Engine",
+                intent=intent,
+                data_sufficiency_status=data_status,
+                evidence_cards=[],
+                suggested_followups=followups,
+                actions=[],
+                reporting_period=overview.monthly_briefing.reporting_period,
+                disclaimer="SubWise AI educational knowledge mode.",
+                llm_provider_configured=is_llm,
             )
 
         # ---------------------------------------------------------------------
@@ -607,6 +1242,96 @@ class FinancialAssistantEngine:
         # ROUTE: CONTEXTUAL FOLLOW-UP (Phase 9 Contextual Memory)
         # ---------------------------------------------------------------------
         if intent == "CONTEXTUAL_FOLLOWUP":
+            # 1. Prior billing cycle comparison
+            is_financial_month = any(k in message.lower() for k in ["last month", "previous month", "prior month", "last billing", "prior cycle"])
+
+            # 2. Check if immediately preceding user question was general knowledge
+            prev_was_knowledge = False
+            last_knowledge_topic = ""
+            if not is_financial_month and history:
+                immediate_user_msg = ""
+                for h in reversed(history):
+                    if h.get("role") == "user":
+                        immediate_user_msg = h.get("content", "").lower()
+                        break
+
+                if immediate_user_msg:
+                    for topic in ["machine learning", "artificial intelligence", "deep learning", "inflation", "compound interest", "credit score", "blockchain", "quantum computing"]:
+                        if topic in immediate_user_msg:
+                            prev_was_knowledge = True
+                            last_knowledge_topic = topic
+                            break
+
+            if prev_was_knowledge:
+                is_llm = cls.is_llm_configured()
+                if is_llm:
+                    ai_text = cls._call_gemini_conversational(
+                        message=message,
+                        intent="GENERAL_KNOWLEDGE",
+                        history=history,
+                        account_type=business.account_type or "business",
+                    )
+                    if ai_text:
+                        return AssistantQueryResponse(
+                            response_text=ai_text,
+                            is_ai_generated=True,
+                            generation_model="Google Gemini 1.5 Flash (Educational Follow-up)",
+                            intent="CONTEXTUAL_FOLLOWUP",
+                            data_sufficiency_status=data_status,
+                            evidence_cards=[],
+                            suggested_followups=[
+                                "How does this apply to finance?",
+                                "How much did I spend this month?",
+                                "What are my active subscriptions?",
+                            ],
+                            actions=[],
+                            reporting_period=overview.monthly_briefing.reporting_period,
+                            disclaimer="SubWise AI educational knowledge mode.",
+                            llm_provider_configured=True,
+                        )
+
+                # Deterministic knowledge follow-up
+                if last_knowledge_topic == "machine learning":
+                    kf_text = (
+                        "Machine learning algorithms learn by evaluating training examples against a mathematical loss function. "
+                        "They iteratively update internal weights through optimization methods (like gradient descent), allowing the model "
+                        "to minimize errors and discover patterns directly from raw data without needing hardcoded rules."
+                    )
+                elif last_knowledge_topic == "inflation":
+                    kf_text = (
+                        "Inflation typically accelerates when total aggregate demand in an economy outpaces production capacity ('demand-pull'), "
+                        "or when input costs like labor and energy spike ('cost-push'). Central banks adjust interest rates to manage this balance."
+                    )
+                elif last_knowledge_topic == "compound interest":
+                    kf_text = (
+                        "The mathematical formula for compound interest is A = P(1 + r/n)^(nt), where P is the principal, r is the annual rate, "
+                        "n is compounding frequency, and t is time. Because exponentiation compounds over time, starting early provides outsized benefits."
+                    )
+                else:
+                    kf_text = (
+                        f"Building on {last_knowledge_topic.title()}, continuous learning and observation allow structured models "
+                        "to adapt to evolving data inputs over time. Let me know if you would like to explore practical examples or connect this to your financial data!"
+                    )
+
+                return AssistantQueryResponse(
+                    response_text=kf_text,
+                    is_ai_generated=False,
+                    generation_model="SubWise Conversational Intelligence Engine",
+                    intent=intent,
+                    data_sufficiency_status=data_status,
+                    evidence_cards=[],
+                    suggested_followups=[
+                        "How much did I spend this month?",
+                        "What are my active subscriptions?",
+                        "Can I afford a new subscription for $30/mo?",
+                    ],
+                    actions=[],
+                    reporting_period=overview.monthly_briefing.reporting_period,
+                    disclaimer="SubWise AI contextual follow-up mode.",
+                    llm_provider_configured=is_llm,
+                )
+
+            # Financial Contextual Follow-up (Prior month comparison or financial driver analysis)
             if any(k in message.lower() for k in ["last month", "previous month", "prior month"]):
                 cf_md = (
                     f"### Historical Comparison & Previous Month Context for **{company_name}**\n\n"

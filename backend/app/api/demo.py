@@ -92,21 +92,22 @@ def get_demo_status(
 
 @router.post("/generate")
 def generate_demo_dataset(
+    force_reset: bool = False,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Generates a realistic 6-month historical dataset for DemoTech Solutions.
-    Switches active profile to Demo mode.
+    Generates or safely reuses the 6-month historical demo dataset.
+    Preserves account type and switches active profile to Demo mode.
     """
-    res = DemoDataGenerator.generate_demo_dataset(user_id=current_user.id, db=db)
+    res = DemoDataGenerator.generate_demo_dataset(user_id=current_user.id, db=db, force_reset=force_reset)
     # Switch active business to demo
     current_user.active_business_id = res["business_id"]
     db.commit()
 
     return {
         "status": "success",
-        "message": "Realistic 6-month demo dataset successfully generated for DemoTech Solutions.",
+        "message": "Demo dataset ready (reused canonical baseline)." if res.get("reused") else "Realistic 6-month demo dataset successfully prepared.",
         "active_mode": "demo",
         **res,
     }
@@ -118,7 +119,7 @@ def reset_demo_dataset(
     db: Session = Depends(get_db),
 ):
     """
-    Safely resets and regenerates the demo dataset for DemoTech Solutions.
+    Safely resets and regenerates the demo dataset.
     Safety guarantee: NEVER deletes real sandbox transactions.
     """
     demo_biz = (
@@ -132,7 +133,7 @@ def reset_demo_dataset(
     if not demo_biz:
         demo_biz = DemoDataGenerator.ensure_demo_business(user_id=current_user.id, db=db)
 
-    res = DemoDataGenerator.generate_demo_dataset(user_id=current_user.id, db=db)
+    res = DemoDataGenerator.generate_demo_dataset(user_id=current_user.id, db=db, force_reset=True)
     current_user.active_business_id = demo_biz.id
     db.commit()
 

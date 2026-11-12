@@ -22,6 +22,9 @@ const IndividualDashboardView = ({
   filteredTransactions,
   hasTransactions,
   loadingData,
+  essentialReady = true,
+  importantReady = true,
+  advancedReady = true,
   syncing,
   syncStatus,
   handleSync,
@@ -348,7 +351,17 @@ const IndividualDashboardView = ({
           </Link>
         </div>
 
-        {personalRecs.length > 0 ? (
+        {!advancedReady ? (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
+            {[1, 2, 3].map(i => (
+              <div key={i} style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '1rem', height: '110px' }}>
+                <div style={{ width: '35%', height: '14px', background: '#e2e8f0', borderRadius: '4px', marginBottom: '0.65rem', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ width: '70%', height: '16px', background: '#cbd5e1', borderRadius: '4px', marginBottom: '0.5rem', animation: 'pulse 1.5s infinite' }} />
+                <div style={{ width: '90%', height: '12px', background: '#f1f5f9', borderRadius: '4px', animation: 'pulse 1.5s infinite' }} />
+              </div>
+            ))}
+          </div>
+        ) : personalRecs.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '0.75rem' }}>
             {personalRecs.slice(0, 3).map((r, idx) => (
               <div key={r.id || idx} style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-light)', borderRadius: '8px', padding: '0.95rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -385,8 +398,21 @@ const IndividualDashboardView = ({
 
       {/* Charts Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '1rem' }}>
-        <IncomeExpenseChart data={monthlyChartData} />
-        <CategoryPieChart data={categoryPieData} />
+        {!importantReady ? (
+          <>
+            <div className="fintech-card" style={{ height: '320px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+              Loading spending overview...
+            </div>
+            <div className="fintech-card" style={{ height: '320px', padding: '1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+              Loading categories...
+            </div>
+          </>
+        ) : (
+          <>
+            <IncomeExpenseChart data={monthlyChartData} />
+            <CategoryPieChart data={categoryPieData} />
+          </>
+        )}
       </div>
 
       {/* Upcoming Personal Recurring Commitments */}

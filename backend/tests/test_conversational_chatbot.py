@@ -277,3 +277,183 @@ def test_conversational_chat_persistence_and_isolation(db_session):
     # Ensure conversation and messages are cascade deleted
     assert db_session.query(Conversation).filter(Conversation.id == conv_id).first() is None
     assert db_session.query(ChatMessage).filter(ChatMessage.conversation_id == conv_id).count() == 0
+
+
+# ---------------------------------------------------------------------------
+# 7. NATURAL CONVERSATIONAL & GENERAL KNOWLEDGE TESTS (Phase 10 Upgrade)
+# ---------------------------------------------------------------------------
+def test_natural_greetings():
+    """Verify natural human-like greeting responses without premature financial table dumps."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="individual")
+
+    for greeting in ["Hii!", "Hello", "Hey", "Good morning", "Hey there"]:
+        res = FinancialAssistantEngine.process_query(
+            business=biz,
+            subscriptions=[],
+            transactions=[],
+            request=AssistantQueryRequest(message=greeting),
+            history=[],
+        )
+        assert res.intent == "CASUAL_CONVERSATION", f"Failed for {greeting}"
+        assert not res.is_ai_generated  # Deterministic when no Gemini
+        assert "SubWise AI assistant" in res.response_text or "How's it going" in res.response_text or "What can I help" in res.response_text
+        assert len(res.evidence_cards) == 0  # No intrusive cards on greetings
+
+
+def test_subsequent_greeting_avoids_reintroduction():
+    """Verify assistant does not repeatedly introduce itself when history already exists."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="individual")
+
+    history = [
+        {"role": "user", "content": "Hii!"},
+        {"role": "assistant", "content": "Hey! How's it going? I'm your SubWise AI assistant. What can I help you with today?"},
+    ]
+
+    res = FinancialAssistantEngine.process_query(
+        business=biz,
+        subscriptions=[],
+        transactions=[],
+        request=AssistantQueryRequest(message="Hey again"),
+        history=history,
+    )
+    assert res.intent == "CASUAL_CONVERSATION"
+    assert "Hey again" in res.response_text or "Hello" in res.response_text
+    assert "I'm your SubWise AI assistant" not in res.response_text  # Avoids repetitive self-introduction
+
+
+def test_casual_checkins():
+    """Verify natural conversational responses to 'How are you?', 'What are you doing?', and 'What's up?'."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="business")
+
+    # How are you?
+    r_how = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="How are you?"))
+    assert r_how.intent == "CASUAL_CONVERSATION"
+    assert "doing well" in r_how.response_text.lower() or "great" in r_how.response_text.lower()
+    assert len(r_how.evidence_cards) == 0
+
+    # What are you doing?
+    r_doing = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="What are you doing?"))
+    assert r_doing.intent == "CASUAL_CONVERSATION"
+    assert "here and ready to help" in r_doing.response_text.lower() or "keeping track" in r_doing.response_text.lower()
+
+    # What's up?
+    r_up = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="What's up?"))
+    assert r_up.intent == "CASUAL_CONVERSATION"
+    assert "ready to help" in r_up.response_text.lower() or "not much" in r_up.response_text.lower()
+
+
+def test_appreciation_and_farewells():
+    """Verify friendly appreciation acknowledgments and farewell responses."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="individual")
+
+    # Thank you
+    for thx in ["Thank you", "Thanks", "Awesome, thanks a lot", "Thank you so much"]:
+        r_thx = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message=thx))
+        assert r_thx.intent == "CASUAL_CONVERSATION", f"Failed on: {thx}"
+        assert "welcome" in r_thx.response_text.lower() or "glad" in r_thx.response_text.lower()
+        assert len(r_thx.evidence_cards) == 0
+
+    # Farewells
+    for bye in ["Bye", "Goodbye", "See you later", "Good night"]:
+        r_bye = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message=bye))
+        assert r_bye.intent == "CASUAL_CONVERSATION", f"Failed on: {bye}"
+        assert any(k in r_bye.response_text.lower() for k in ["goodbye", "good night", "take care", "see you", "great day"])
+
+
+def test_boredom_and_casual_engagement():
+    """Verify engaging responses to 'I'm bored' and 'Tell me something interesting'."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="individual")
+
+    # I'm bored
+    r_bored = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="I'm bored."))
+    assert r_bored.intent == "CASUAL_CONVERSATION"
+    assert "interesting" in r_bored.response_text.lower() or "learn" in r_bored.response_text.lower() or "chat" in r_bored.response_text.lower()
+
+    # Tell me something interesting
+    r_fact = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="Tell me something interesting"))
+    assert r_fact.intent == "CASUAL_CONVERSATION"
+    assert "salary" in r_fact.response_text.lower() or "interesting" in r_fact.response_text.lower() or "fact" in r_fact.response_text.lower()
+
+
+def test_general_knowledge_questions():
+    """Verify educational concept explanations without inventing fake user accounts."""
+    biz = BusinessProfile(id=1, user_id=1, company_name="Test User", account_type="business")
+
+    # 1. Machine Learning
+    r_ml = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="Explain machine learning"))
+    assert r_ml.intent == "GENERAL_KNOWLEDGE"
+    assert "machine learning" in r_ml.response_text.lower()
+    assert "learn patterns" in r_ml.response_text.lower() or "predictions" in r_ml.response_text.lower()
+    assert len(r_ml.evidence_cards) == 0
+
+    # 2. Inflation
+    r_inf = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="What is inflation?"))
+    assert r_inf.intent == "GENERAL_KNOWLEDGE"
+    assert "purchasing power" in r_inf.response_text.lower() or "prices" in r_inf.response_text.lower()
+
+    # 3. Compound Interest
+    r_ci = FinancialAssistantEngine.process_query(biz, [], [], AssistantQueryRequest(message="What is compound interest?"))
+    assert r_ci.intent == "GENERAL_KNOWLEDGE"
+    assert "interest" in r_ci.response_text.lower()
+    assert "principal" in r_ci.response_text.lower() or "interest on" in r_ci.response_text.lower()
+
+
+def test_conversation_mode_transitions():
+    """
+    Verify bidirectional transition between casual conversation and financial intelligence:
+    1. Casual greeting
+    2. General knowledge explanation
+    3. Financial data inquiry (grounded in actual records)
+    4. Financial follow-up
+    5. Casual appreciation & farewell
+    """
+    biz = BusinessProfile(id=1, user_id=1, company_name="Transition Corp", account_type="business", monthly_baseline_revenue=6000.0)
+    sub = Subscription(id=1, business_id=1, vendor_name="CloudSaaS", latest_amount=35.0, average_amount=35.0, cadence="monthly", status="active")
+
+    conv = []
+
+    # Turn 1: Casual Greeting
+    req1 = AssistantQueryRequest(message="Hii!")
+    res1 = FinancialAssistantEngine.process_query(biz, [sub], [], req1, history=conv)
+    assert res1.intent == "CASUAL_CONVERSATION"
+    assert len(res1.evidence_cards) == 0
+    conv.append({"role": "user", "content": "Hii!"})
+    conv.append({"role": "assistant", "content": res1.response_text})
+
+    # Turn 2: General Knowledge
+    req2 = AssistantQueryRequest(message="Explain machine learning.")
+    res2 = FinancialAssistantEngine.process_query(biz, [sub], [], req2, history=conv)
+    assert res2.intent == "GENERAL_KNOWLEDGE"
+    conv.append({"role": "user", "content": "Explain machine learning."})
+    conv.append({"role": "assistant", "content": res2.response_text})
+
+    # Turn 3: Transition to Financial Question (Actual database records)
+    req3 = AssistantQueryRequest(message="What subscriptions am I currently paying for?")
+    res3 = FinancialAssistantEngine.process_query(biz, [sub], [], req3, history=conv)
+    assert res3.intent == "SPEND_OVERVIEW"
+    assert "CloudSaaS" in res3.response_text
+    assert "$35.00" in res3.response_text
+    conv.append({"role": "user", "content": "What subscriptions am I currently paying for?"})
+    conv.append({"role": "assistant", "content": res3.response_text})
+
+    # Turn 4: Financial Contextual Follow-up
+    req4 = AssistantQueryRequest(message="What about last month?")
+    res4 = FinancialAssistantEngine.process_query(biz, [sub], [], req4, history=conv)
+    assert res4.intent == "CONTEXTUAL_FOLLOWUP"
+    assert "Historical Comparison" in res4.response_text or "prior billing cycle" in res4.response_text
+    conv.append({"role": "user", "content": "What about last month?"})
+    conv.append({"role": "assistant", "content": res4.response_text})
+
+    # Turn 5: Transition back to Casual Appreciation
+    req5 = AssistantQueryRequest(message="Thank you!")
+    res5 = FinancialAssistantEngine.process_query(biz, [sub], [], req5, history=conv)
+    assert res5.intent == "CASUAL_CONVERSATION"
+    assert "welcome" in res5.response_text.lower()
+    conv.append({"role": "user", "content": "Thank you!"})
+    conv.append({"role": "assistant", "content": res5.response_text})
+
+    # Turn 6: Farewell
+    req6 = AssistantQueryRequest(message="Bye!")
+    res6 = FinancialAssistantEngine.process_query(biz, [sub], [], req6, history=conv)
+    assert res6.intent == "CASUAL_CONVERSATION"
+    assert "goodbye" in res6.response_text.lower() or "great day" in res6.response_text.lower()

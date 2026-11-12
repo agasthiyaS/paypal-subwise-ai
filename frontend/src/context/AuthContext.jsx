@@ -65,6 +65,7 @@ export const AuthProvider = ({ children }) => {
   const _clearAuth = () => {
     localStorage.removeItem('subwise_token');
     localStorage.removeItem('subwise_user');
+    localStorage.removeItem('subwise_demo_mode');
     setToken(null);
     setUser(null);
     setBusiness(null);
@@ -194,6 +195,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isDemoMode = Boolean(business?.is_demo || business?.profile_type === 'DEMO');
+  const isDemoUser = Boolean(user?.email === 'demo@subwise.io');
+
+  const exitDemoSession = () => {
+    _clearAuth();
+    return true;
+  };
 
   return (
     <AuthContext.Provider
@@ -202,6 +209,8 @@ export const AuthProvider = ({ children }) => {
         user,
         business,
         isDemoMode,
+        isDemoUser,
+        exitDemoSession,
         loading: initialLoading,
         initialLoading,
         login,

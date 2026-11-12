@@ -34,7 +34,7 @@ class ChatMessage(Base):
     role = Column(String(20), nullable=False)  # 'user' or 'assistant'
     content = Column(Text, nullable=False)
     meta_data = Column(JSON, nullable=True)  # provider, is_ai_generated, generation_model, intent, evidence_cards, actions, etc.
-    
+
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     conversation = relationship("Conversation", back_populates="messages")

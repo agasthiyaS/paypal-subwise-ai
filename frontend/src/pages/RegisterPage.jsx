@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Building2,
@@ -50,11 +50,19 @@ const HOUSEHOLD_PRIORITIES = [
 ];
 
 const RegisterPage = () => {
-  const { register } = useAuth();
+  const { register, isDemoUser, exitDemoSession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Read preselected account type from URL (e.g. /register?type=household)
+  const searchParams = new URLSearchParams(location.search);
+  const typeParam = searchParams.get('type');
+  const validTypes = ['individual', 'household', 'business'];
+  const hasValidTypeParam = Boolean(typeParam && validTypes.includes(typeParam.toLowerCase()));
+  const initialType = hasValidTypeParam ? typeParam.toLowerCase() : 'individual';
 
   // Selected account type: 'individual' | 'household' | 'business'
-  const [accountType, setAccountType] = useState('individual');
+  const [accountType, setAccountType] = useState(initialType);
 
   const [form, setForm] = useState({
     // Common
@@ -80,7 +88,8 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: Type Select, 2: Account Details, 3: Financial Baseline
+  // If account type was pre-selected from landing page, step 2 is active with ability to go back
+  const [step, setStep] = useState(hasValidTypeParam ? 2 : 1);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -160,7 +169,7 @@ const RegisterPage = () => {
 
     const res = await register(payload);
     if (res.success) {
-      navigate('/dashboard');
+      navigate('/onboarding');
     } else {
       setError(res.message);
       setLoading(false);
@@ -181,7 +190,37 @@ const RegisterPage = () => {
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       <div style={{ width: '100%', maxWidth: '640px' }}>
-        
+
+        {/* Demo Session Notice if currently in demo mode */}
+        {isDemoUser && (
+          <div style={{
+            background: '#f8fafc',
+            border: '1px solid #cbd5e1',
+            borderRadius: '10px',
+            padding: '0.85rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '1rem',
+            fontSize: '0.88rem',
+            color: '#334155'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Sparkles size={16} color="#0070ba" />
+              <span>You are exploring in Demo Mode. Registering will create your own dedicated account.</span>
+            </div>
+            <button
+              onClick={() => exitDemoSession()}
+              type="button"
+              className="btn-fintech btn-fintech-outline"
+              style={{ padding: '0.3rem 0.65rem', fontSize: '0.8rem', whiteSpace: 'nowrap' }}
+            >
+              Exit Demo
+            </button>
+          </div>
+        )}
+
         {/* Top Brand Header */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <Link to="/" style={{ textDecoration: 'none', display: 'inline-block' }}>

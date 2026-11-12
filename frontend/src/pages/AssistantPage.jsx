@@ -72,6 +72,8 @@ const INTENT_ICONS = {
   HOUSEHOLD_SPENDING: Layers,
   CONTEXTUAL_FOLLOWUP: Brain,
   GENERAL_FINTECH: Brain,
+  CASUAL_CONVERSATION: MessageSquare,
+  GENERAL_KNOWLEDGE: HelpCircle,
 };
 
 // ---------------------------------------------------------------------------

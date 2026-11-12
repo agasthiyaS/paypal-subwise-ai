@@ -116,9 +116,9 @@ const LandingPage = () => {
         {/* Auth Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Link to="/login" className="btn-fintech btn-fintech-outline" style={{ padding: '0.5rem 1.15rem', fontSize: '0.9rem' }}>
-            Demo Workspace
+            Sign In
           </Link>
-          <Link to="/register" className="btn-fintech btn-fintech-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}>
+          <Link to={`/register?type=${activeAudience}`} className="btn-fintech btn-fintech-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}>
             Get Started Free
           </Link>
         </div>
@@ -175,7 +175,7 @@ const LandingPage = () => {
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: '1.25rem', flexWrap: 'wrap', marginBottom: '3.5rem' }}>
-          <Link to="/register" className="btn-fintech btn-fintech-primary btn-lg" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.85rem 2rem', fontSize: '1.05rem', borderRadius: '8px' }}>
+          <Link to={`/register?type=${activeAudience}`} className="btn-fintech btn-fintech-primary btn-lg" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.85rem 2rem', fontSize: '1.05rem', borderRadius: '8px' }}>
             <span>Start Free Transformation</span>
             <ArrowRight size={19} />
           </Link>
@@ -330,7 +330,7 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <Link to="/register" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Link to="/register?type=individual" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span>Create Individual Account</span>
                     <ChevronRight size={18} />
                   </Link>
@@ -420,7 +420,7 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <Link to="/register" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Link to="/register?type=household" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span>Create Household Account</span>
                     <ChevronRight size={18} />
                   </Link>
@@ -510,7 +510,7 @@ const LandingPage = () => {
                     </div>
                   </div>
 
-                  <Link to="/register" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Link to="/register?type=business" className="btn-fintech btn-fintech-primary" style={{ padding: '0.75rem 1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
                     <span>Create Business Profile</span>
                     <ChevronRight size={18} />
                   </Link>
@@ -696,7 +696,7 @@ const LandingPage = () => {
                 <span style={{ fontSize: '0.85rem', color: '#93c5fd' }}>3-Year Wealth Acceleration:</span>
                 <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#38bdf8' }}>${threeYearAccumulated.toLocaleString()}</span>
               </div>
-              <Link to="/register" className="btn-fintech btn-fintech-primary" style={{ width: '100%', textAlign: 'center', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 700, display: 'block', backgroundColor: '#0070ba' }}>
+              <Link to={`/register?type=${activeAudience}`} className="btn-fintech btn-fintech-primary" style={{ width: '100%', textAlign: 'center', padding: '0.75rem', fontSize: '0.95rem', fontWeight: 700, display: 'block', backgroundColor: '#0070ba' }}>
                 Claim Your Savings Now
               </Link>
             </div>
@@ -774,7 +774,7 @@ const LandingPage = () => {
             <strong style={{ color: '#003087', fontSize: '1rem' }}>PayPal SubWise AI</strong>
           </div>
           <div style={{ display: 'flex', gap: '2rem', fontSize: '0.85rem' }}>
-            <Link to="/register" style={{ color: '#64748b', textDecoration: 'none' }}>Get Started</Link>
+            <Link to={`/register?type=${activeAudience}`} style={{ color: '#64748b', textDecoration: 'none' }}>Get Started</Link>
             <Link to="/login" style={{ color: '#64748b', textDecoration: 'none' }}>Sign In</Link>
             <Link to="/login" style={{ color: '#64748b', textDecoration: 'none' }}>Demo Sandbox</Link>
           </div>
