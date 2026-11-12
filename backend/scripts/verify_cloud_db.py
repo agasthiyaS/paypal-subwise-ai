@@ -16,6 +16,25 @@ from app.config import settings
 from sqlalchemy import create_engine, inspect, text
 
 
+REQUIRED_TABLES = [
+    "users",
+    "business_profiles",
+    "transactions",
+    "subscriptions",
+    "expenses",
+    "budgets",
+    "household_members",
+    "vendors",
+    "vendor_plans",
+    "recommendations",
+    "scenario_simulations",
+    "conversations",
+    "chat_messages",
+    "webhook_events",
+    "alembic_version",
+]
+
+
 def mask_db_url(url: str) -> str:
     """Masks database password in connection string for safe console output."""
     if not url:
@@ -46,30 +65,13 @@ def verify_database():
     print(f"\n[SUCCESS] Successfully connected to database engine.")
     print(f"Total Tables Detected: {len(tables)}")
 
-    REQUIRED_TABLES = [
-        "users",
-        "business_profiles",
-        "transactions",
-        "subscriptions",
-        "expenses",
-        "budgets",
-        "household_members",
-        "vendor_catalog",
-        "vendor_plans",
-        "entitlements",
-        "conversations",
-        "chat_messages",
-        "webhook_events",
-        "alembic_version",
-    ]
-
     missing = [t for t in REQUIRED_TABLES if t not in tables]
     if missing:
         print(f"\n[INCOMPLETE] Missing {len(missing)} required tables: {', '.join(missing)}")
         print("Run `alembic upgrade head` against this database to apply all migrations.")
         sys.exit(1)
     else:
-        print("\n[VERIFIED] All 14 required database tables exist:")
+        print(f"\n[VERIFIED] All {len(REQUIRED_TABLES)} required database tables exist:")
         for t in sorted(REQUIRED_TABLES):
             col_count = len(inspector.get_columns(t))
             print(f"  ✓ {t:<24} ({col_count} columns)")

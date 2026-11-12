@@ -128,3 +128,29 @@ def test_cors_origins_development_includes_both(monkeypatch):
     assert "https://staging.subwise.app" in origins
     assert "http://localhost:3000" in origins
     assert "*" not in origins
+
+
+def test_verify_cloud_db_required_tables_match_models():
+    """REQUIRED_TABLES in verify_cloud_db must match all registered models plus alembic_version."""
+    import backend.scripts.verify_cloud_db as vcd
+    from app.database import Base
+    import app.models  # populate metadata
+
+    model_tables = set(Base.metadata.tables.keys())
+    expected = model_tables | {"alembic_version"}
+
+    assert set(vcd.REQUIRED_TABLES) == expected
+    assert len(vcd.REQUIRED_TABLES) == 15
+    assert "vendor_catalog" not in vcd.REQUIRED_TABLES
+    assert "entitlements" not in vcd.REQUIRED_TABLES
+    assert "vendors" in vcd.REQUIRED_TABLES
+    assert "vendor_plans" in vcd.REQUIRED_TABLES
+
+
+def test_mask_db_url():
+    """mask_db_url must redact plaintext database passwords."""
+    import backend.scripts.verify_cloud_db as vcd
+    url = "postgresql://user_admin:SuperSecretPass123!@ep-xyz.ap-south-1.aws.neon.tech/neondb?sslmode=require"
+    masked = vcd.mask_db_url(url)
+    assert "SuperSecretPass123!" not in masked
+    assert "postgresql://user_admin:***@ep-xyz.ap-south-1.aws.neon.tech/neondb?sslmode=require" == masked
